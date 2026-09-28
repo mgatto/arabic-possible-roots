@@ -1,8 +1,65 @@
 [project]
-name = "code"
+name = "arabic-roots"
 version = "0.1.0"
-requires-python = ">=3.14"
+description = "Enumerate all possible triliteral Arabic roots constrained by phonotactic co-occurrence matrices"
+readme = "AGENTS.md"
+requires-python = "==3.14.*"
 dependencies = [
     "frozendict>=2.4.7",
+    "pandas>=2.2",
     "python-statemachine>=3.2.1",
 ]
+
+[project.scripts]
+enumerate-roots = "arabic_roots.cli:main"
+
+[dependency-groups]
+dev = [
+    "mypy>=1.18",
+    "pandas-stubs>=2.2",
+    "pytest>=8.3",
+    "pytest-cov>=6.0",
+    "ruff>=0.12",
+    "ty>=0.0.15",
+]
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+target-version = "py314"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "W", "N", "C90"]
+ignore = []
+
+[tool.ruff.lint.isort]
+force-single-line = false
+known-first-party = ["arabic_roots"]
+
+[tool.mypy]
+strict = true
+warn_unused_ignores = true
+show_error_codes = true
+python_version = "3.14"
+mypy_path = "src"
+
+[[tool.mypy.overrides]]
+module = "statemachine.*"
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--strict-markers --cov=arabic_roots --cov-report=term-missing"
+
+[tool.coverage.report]
+fail_under = 80
+exclude_also = ["if TYPE_CHECKING:", "raise AssertionError", "@(abc\\.)?abstractmethod"]
+
+[tool.ty.environment]
+python-version = "3.14"

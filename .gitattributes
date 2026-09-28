@@ -1,0 +1,5 @@
+# Text handling: UTF-8 everywhere, LF line endings, NFC normalization for Arabic.
+* text=auto eol=lf working-tree-encoding=UTF-8
+*.py text diff=python working-tree-encoding=UTF-8
+*.csv text working-tree-encoding=UTF-8
+*.md text working-tree-encoding=UTF-8
