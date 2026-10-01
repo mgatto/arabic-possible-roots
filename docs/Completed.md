@@ -51,7 +51,7 @@ there and a full entry here.
   - Golden count pinned: `GOLDEN_MSA_COUNT = 3959` in `tests/test_attestation.py`.
   - `uv run ruff check src tests`, `ruff format --check`, `mypy src tests`,
     `uv run ty check` all clean; `scripts/` also clean.
-  - Spot checks: `ك-ت-ب` attested; `ض-ض-ض` (legal, unattested) reported fake.
+  - Spot checks: `ك-ت-ب` attested; `ض-ض-ض` (legal, unattested) reported possible.
 - **Deviations:**
   - The approved extraction path (`POS == ROOT` Arabic `LEMMA_ARA` rows) exists
     only in `lemmas_sample.csv` (13 roots), **not** in the full `lemmas.csv`

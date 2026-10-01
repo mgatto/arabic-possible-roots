@@ -1,9 +1,9 @@
-# AGENTS.md — Arabic FakeRoot Enumerator
+# AGENTS.md — Arabic PossibleRoot Enumerator
 
 ## 1. Goal
 
-Enumerate every possible triliteral (ف-ع-ل) root over the Arabic consonant
-inventory, filtered by phonotactic co-occurrence. A *fake root* is
+Enumerate triliteral (ف-ع-ل) roots over the Arabic consonant
+inventory, filtered by phonotactic co-occurrence. A *possible root* is
 phonotactically legal but unattested. Permissive baseline is
 `28³ = 21952` candidates; matrices only remove pairs with a cited source.
 

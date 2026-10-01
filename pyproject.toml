@@ -1,7 +1,7 @@
 [project]
 name = "arabic-roots"
 version = "0.5.0"
-description = "Enumerate all possible triliteral Arabic roots constrained by phonotactic co-occurrence matrices"
+description = "Enumerate triliteral Arabic roots constrained by phonotactic co-occurrence matrices"
 readme = "AGENTS.md"
 requires-python = "==3.14.*"
 dependencies = [

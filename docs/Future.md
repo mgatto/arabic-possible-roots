@@ -14,7 +14,7 @@ data claim needs a citable source plus a regression test.
 ### Background
 
 Today the repo can say whether a triple is *phonotactically legal*
-(`M_1-2 ∧ M_2-3`), but not whether it is *attested*. A *fake root* is defined
+(`M_1-2 ∧ M_2-3`), but not whether it is *attested*. A *possible root* is defined
 as legal-but-unattested, so attestation data is the missing half of the
 project's core concept.
 
@@ -113,7 +113,7 @@ Yes/No questions: *is it phonotactically valid?* and *is it attested?*
 
 - Add a single-root oracle returning a 4-way verdict:
   - valid + attested → real root (e.g. ك-ت-ب)
-  - valid + unattested → **fake root** (the project's target concept)
+  - valid + unattested → **possible root** (the project's target concept)
   - invalid + unattested → impossible root
   - invalid + attested → data inconsistency (matrices vs. attestation
     disagree — must be surfaced, never silently passed)
@@ -147,7 +147,7 @@ Yes/No questions: *is it phonotactically valid?* and *is it attested?*
   once Ryder prohibitions land.
 - The inconsistent quadrant (invalid + attested) is constructible in a
   `tmp_path` fixture and surfaces its label.
-- CLI `check` test asserting stdout lines for a real root, a fake root,
+- CLI `check` test asserting stdout lines for a real root, a possible root,
   and an impossible root.
 
 ### Acceptance criteria
