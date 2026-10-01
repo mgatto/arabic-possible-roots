@@ -40,7 +40,7 @@ def test_decode_encode_roundtrip() -> None:
 
 
 def test_decode_keeps_arbitrary_length() -> None:
-    """Decoding preserves length; the triliteral check lives in ingest."""
+    """Decoding preserves length; the triliteral check lives in the provider."""
     decoder = _real_decoder()
     encoded = encode_root(("ب", "ت"), build_encoder(decoder))
     assert encoded is not None

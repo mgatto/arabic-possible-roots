@@ -13,10 +13,10 @@ Standard `src/` layout, package `arabic_roots`:
 
 ```text
 src/arabic_roots/
-  alphabet.py       # 28-glyph source of truth: ORDER, LETTERS, LOOKUP, CATEGORIES
+  alphabet.py       # 28-glyph source of truth: ORDER, LETTERS, LOOKUP, Place/Manner
   phonotactics.py   # load_matrices() + is_allowed(c1,c2,c3,m_1_2,m_2_3)
   enumerator.py     # iter_roots() / count_roots() via itertools.product
-  ingest.py         # build-time root extraction/dedupe (pure, no I/O)
+  arabic_chain_bank_provider.py # ArabicChainBank build-time extraction/dedupe (pure, no I/O)
   transliteration.py# scheme encode/decode (Buckwalter now; DIN/IJMES/IPA later)
   attestation.py    # load_attested() + is_attested() over data/attested.csv
   statemachine.py   # TriliteralMachine: single-root guard prototype (tests only)
@@ -30,7 +30,7 @@ scripts/            # build-time orchestrators (fetch_attested.py)
 docs/running.md     # how to run (commands, failure table, options)
 docs/Future.md      # unimplemented micro-PRDs (oracle, rendering)
 docs/Completed.md   # shipped micro-PRDs ledger (date, SHA, evidence)
-tests/              # alphabet, matrices, golden-count, ingest, attestation, cli
+tests/              # alphabet, matrices, golden-count, chain-bank, attestation, cli
 ../Notes/           # Obsidian knowledge bank (outside git, read-only ref)
 ../Media/           # PDFs, IPA scans (outside git)
 ```
@@ -44,10 +44,10 @@ exercised by tests only; it is **not** on the enumeration path.
 
 Attestation is a separate axis from phonotactics. `attestation.py` reads
 `data/attested.csv` (MSA triliteral roots: `c1,c2,c3,variety,source`) and
-answers `is_attested(...)`; `ingest.py` holds the pure root extraction/dedupe
-used only at build time by `scripts/fetch_attested.py`, with scheme
-encode/decode in `transliteration.py`. Attested data is a lexicon, not a
-rule: it never feeds `is_allowed`, and `enumerator.py` stays rule-only.
+answers `is_attested(...)`; `arabic_chain_bank_provider.py` holds the pure
+root extraction/dedupe used only at build time by `scripts/fetch_attested.py`,
+with scheme encode/decode in `transliteration.py`. Attested data is a lexicon,
+not a rule: it never feeds `is_allowed`, and `enumerator.py` stays rule-only.
 
 Legacy top-level `Alphabet.py` / `main.py` are superseded and deleted;
 do not reintroduce them. `main.py` had a missing `pandas` import and ASCII
@@ -87,7 +87,8 @@ stub alphabet — ported and fixed under `src/`.
 - Files: UTF-8, LF, NFC. Enforced by `.editorconfig` (`charset=utf-8`),
   `.gitattributes` (`working-tree-encoding=UTF-8`), `PYTHONUTF8=1`.
 - Arabic glyphs are literal codepoints (`"ح"`, never `"H"`, `"7"`, `"\\u062D"`).
-  Normalize ingest with `unicodedata.normalize("NFC", s)`.
+  Normalize via `alphabet.nfc`; raw `unicodedata.normalize` appears **only**
+  inside `nfc` (enforced by `tests/test_unicode_policy.py`).
 - Scope: 28 consonants in `ORDER`, hamza = single `ء U+0621`. No carriers
   (`أ إ آ ؤ ئ`), no bare alif (`ا U+0627`). Validate via
   `alphabet.normalize_glyph` / `is_valid_glyph`.

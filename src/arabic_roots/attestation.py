@@ -1,13 +1,12 @@
 """Attested-root lookup loaded from ``data/attested.csv``.
 
-Runtime counterpart to :mod:`arabic_roots.ingest`. The CSV holds one row per
-``(variety, c1, c2, c3)`` with literal Arabic glyphs from
+Runtime counterpart to :mod:`arabic_roots.arabic_chain_bank_provider`. The CSV
+holds one row per ``(variety, c1, c2, c3)`` with literal Arabic glyphs from
 :data:`arabic_roots.alphabet.ORDER` and a ``source`` citation. This module
 mirrors :mod:`arabic_roots.phonotactics`: default ``<repo>/data``, an
 explicit ``data_dir`` for tests, and loud validation of malformed rows.
 """
 
-import unicodedata
 from collections.abc import Mapping
 from pathlib import Path
 
@@ -15,7 +14,7 @@ import pandas as pd
 from frozendict import frozendict
 
 from arabic_roots.alphabet import normalize_glyph
-from arabic_roots.phonotactics import default_data_dir
+from arabic_roots.phonotactics import DATA_DIR
 
 __all__ = ["load_attested", "is_attested"]
 
@@ -27,22 +26,36 @@ def load_attested(
 ) -> frozendict[str, frozenset[tuple[str, str, str]]]:
     """Load ``attested.csv`` as a variety -> frozenset of triples map.
 
+    Args:
+        data_dir: Directory holding ``attested.csv``. Defaults to
+            :data:`arabic_roots.phonotactics.DATA_DIR`.
+
+    Returns:
+        A ``frozendict`` mapping each ``variety`` to the frozenset of its
+        attested ``(c1, c2, c3)`` triples, each glyph NFC-normalized.
+
     Raises:
         FileNotFoundError: When ``attested.csv`` is missing.
         ValueError: On a missing column, invalid glyph, or duplicate row.
+
+    Notes:
+        Every row is validated and deduplicated per ``(variety, c1, c2, c3)``;
+        this is a lexicon lookup, never a phonotactic rule source.
     """
-    directory = data_dir if data_dir is not None else default_data_dir()
+    directory = data_dir if data_dir is not None else DATA_DIR
     frame = pd.read_csv(
         directory / "attested.csv",
         dtype=str,
         keep_default_na=False,
         encoding="utf-8",
     )
+
+    grouped: dict[str, set[tuple[str, str, str]]] = {}
+    seen: set[tuple[str, str, str, str]] = set()
     missing = _REQUIRED_COLUMNS - set(frame.columns)
     if missing:
         raise ValueError(f"attested.csv missing columns: {sorted(missing)}")
-    grouped: dict[str, set[tuple[str, str, str]]] = {}
-    seen: set[tuple[str, str, str, str]] = set()
+
     for record in frame.to_dict("records"):
         triple = (
             normalize_glyph(str(record["c1"])),
@@ -50,11 +63,14 @@ def load_attested(
             normalize_glyph(str(record["c3"])),
         )
         variety = str(record["variety"])
+
         key = (variety, *triple)
         if key in seen:
             raise ValueError(f"duplicate attested row: {key!r}")
         seen.add(key)
+
         grouped.setdefault(variety, set()).add(triple)
+
     return frozendict(
         {variety: frozenset(triples) for variety, triples in grouped.items()}
     )
@@ -67,14 +83,26 @@ def is_attested(
     attested: Mapping[str, frozenset[tuple[str, str, str]]],
     variety: str = "msa",
 ) -> bool:
-    """Return True when the NFC-normalized triple is attested for ``variety``.
+    """Return whether the root is attested for ``variety``.
+
+    Args:
+        first: C1 glyph.
+        second: C2 glyph.
+        third: C3 glyph.
+        attested: Variety -> frozenset map from :func:`load_attested`.
+        variety: Variety label to look up; defaults to ``"msa"``.
+
+    Returns:
+        ``True`` when the NFC-normalized triple is present for ``variety``,
+        ``False`` for an unknown variety or absent root.
 
     Raises:
         ValueError: When any glyph is outside the 28-consonant inventory.
     """
     triple = (
-        unicodedata.normalize("NFC", normalize_glyph(first)),
-        unicodedata.normalize("NFC", normalize_glyph(second)),
-        unicodedata.normalize("NFC", normalize_glyph(third)),
+        normalize_glyph(first),
+        normalize_glyph(second),
+        normalize_glyph(third),
     )
+
     return triple in attested.get(variety, frozenset())

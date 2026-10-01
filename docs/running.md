@@ -33,19 +33,19 @@ tab-separated):
 
 ## Why it fails
 
-| Command | Why it fails |
-|---|---|
-| `python enumerate-roots …` | `python` expects a script *file*; `enumerate-roots` is a generated binary in `.venv/bin/` (from `[project.scripts]`), not `./enumerate-roots` → `can't open file … [Errno 2]` |
-| `python -m enumerate-roots` | No such module; the module is `arabic_roots.cli` (dashes aren't valid module names) |
-| system `python` / `python3` (3.11) | Wrong interpreter; repo pins `==3.14.*` — only `uv run` guarantees 3.14.7 |
+| Command                            | Why it fails                                                                                                                                                                  |
+|------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `python enumerate-roots …`         | `python` expects a script *file*; `enumerate-roots` is a generated binary in `.venv/bin/` (from `[project.scripts]`), not `./enumerate-roots` → `can't open file … [Errno 2]` |
+| `python -m enumerate-roots`        | No such module; the module is `arabic_roots.cli` (dashes aren't valid module names)                                                                                           |
+| system `python` / `python3` (3.11) | Wrong interpreter; repo pins `==3.14.*` — only `uv run` guarantees 3.14.7                                                                                                     |
 
 ## Options
 
-| Flag | Default | Meaning |
-|---|---|---|
-| `--data-dir` | `<repo>/data` | Directory holding `m_1-2.csv` and `m_2-3.csv` |
-| `--limit` | `10` | How many sample roots to print (`0` prints none) |
-| `--output` | none | Optional UTF-8 NFC TSV path for the full enumeration |
+| Flag         | Default       | Meaning                                              |
+|--------------|---------------|------------------------------------------------------|
+| `--data-dir` | `<repo>/data` | Directory holding `m_1-2.csv` and `m_2-3.csv`        |
+| `--limit`    | `10`          | How many sample roots to print (`0` prints none)     |
+| `--output`   | none          | Optional UTF-8 NFC TSV path for the full enumeration |
 
 ## Attested roots (`data/attested.csv`)
 

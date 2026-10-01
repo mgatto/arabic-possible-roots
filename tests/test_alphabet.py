@@ -5,10 +5,11 @@ import unicodedata
 import pytest
 
 from arabic_roots.alphabet import (
-    CATEGORIES,
     LETTERS,
     LOOKUP,
     ORDER,
+    Manner,
+    Place,
     is_valid_glyph,
     normalize_glyph,
 )
@@ -50,13 +51,11 @@ def test_no_ascii_escape_hatch() -> None:
         assert glyph.isascii() is False
 
 
-def test_categories_derive_from_letters() -> None:
-    """Grouping helpers are populated and consistent."""
-    assert len(CATEGORIES["emphatics"]) == 4
-    assert set(CATEGORIES["emphatics"]) == {"ص", "ض", "ط", "ظ"}
-    assert set(CATEGORIES["nasals"]) == {"م", "ن"}
-    assert "ب" in CATEGORIES["bilabials"]
-    assert "ق" in CATEGORIES["uvulars"]
+def test_letters_use_place_and_manner_enums() -> None:
+    """Every Letter carries typed Place/Manner members."""
+    for letter in LETTERS:
+        assert isinstance(letter.place, Place)
+        assert isinstance(letter.manner, Manner)
 
 
 def test_normalize_and_validate() -> None:
@@ -66,3 +65,10 @@ def test_normalize_and_validate() -> None:
     assert is_valid_glyph("A") is False
     with pytest.raises(ValueError, match="not in 28-consonant inventory"):
         normalize_glyph("A")
+
+
+def test_normalize_glyph_is_idempotent() -> None:
+    """normalize_glyph already returns NFC, so re-normalizing is a no-op."""
+    for glyph in ORDER:
+        assert normalize_glyph(glyph) == glyph
+        assert normalize_glyph(normalize_glyph(glyph)) == glyph

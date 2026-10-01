@@ -9,13 +9,12 @@ with each transition guarded by a lookup into the caller's M_1-2/M_2-3 matrices
 ``data/m_1-2.csv`` / ``data/m_2-3.csv``, never here.
 """
 
-import unicodedata
 from typing import Any
 
 import pandas as pd
 from statemachine import State, StateChart
 
-from arabic_roots.alphabet import normalize_glyph
+from arabic_roots.alphabet import nfc, normalize_glyph
 
 __all__ = ["TriliteralMachine"]
 
@@ -43,9 +42,9 @@ class TriliteralMachine(StateChart[Any]):
         super().__init__()
         self.m_1_2 = m_1_2
         self.m_2_3 = m_2_3
-        self.c1 = unicodedata.normalize("NFC", c1) if c1 else ""
-        self.c2 = unicodedata.normalize("NFC", c2) if c2 else ""
-        self.c3 = unicodedata.normalize("NFC", c3) if c3 else ""
+        self.c1 = nfc(c1) if c1 else ""
+        self.c2 = nfc(c2) if c2 else ""
+        self.c3 = nfc(c3) if c3 else ""
 
     def pair12_allowed(self) -> bool:
         """Guard for ``r_1 -> r_2`` consulting M_1-2."""

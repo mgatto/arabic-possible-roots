@@ -16,52 +16,49 @@ test. The state machine never encodes rules itself; it only queries these
 matrices via :func:`is_allowed`.
 """
 
-import unicodedata
 from pathlib import Path
 
 import pandas as pd
 
-from arabic_roots.alphabet import ORDER
+from arabic_roots.alphabet import ORDER, nfc, normalize_glyph
 
-__all__ = ["DATA_DIR", "default_data_dir", "is_allowed", "load_matrices"]
+__all__ = ["DATA_DIR", "is_allowed", "load_matrices"]
 
-
-# TODO this is weird to have a whole function for it.
-def default_data_dir() -> Path:
-    """Return ``<repo>/data`` regardless of the caller's working directory."""
-    return Path(__file__).resolve().parents[2] / "data"
+#: Default ``<repo>/data`` regardless of the caller's working directory.
+DATA_DIR: Path = Path(__file__).resolve().parents[2] / "data"
 
 
-DATA_DIR: Path = default_data_dir()
-
-
-def _normalize_pair(first: str, second: str) -> tuple[str, str]:
-    return (
-        unicodedata.normalize("NFC", first),
-        unicodedata.normalize("NFC", second),
-    )
-
-
-# TODO could rename to load_transitions()
 def load_matrices(data_dir: Path | None = None) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Load ``m_1-2.csv`` and ``m_2-3.csv`` as boolean DataFrames.
+
+    Args:
+        data_dir: Directory holding the two CSVs. Defaults to :data:`DATA_DIR`.
+
+    Returns:
+        ``(m_1_2, m_2_3)`` boolean frames whose index and columns are exactly
+        :data:`arabic_roots.alphabet.ORDER`. A ``True`` cell means the ordered
+        pair may co-occur; the diagonal is ``True`` (gemination permitted).
 
     Raises:
         FileNotFoundError: When either CSV is missing.
         ValueError: When axes do not match :data:`arabic_roots.alphabet.ORDER`.
+
+    Notes:
+        Axis labels are NFC-normalized before the ORDER check, so CSV files
+        written on any platform validate identically.
     """
-    directory = data_dir if data_dir is not None else default_data_dir()
+    directory = data_dir if data_dir is not None else DATA_DIR
+
     m_1_2 = pd.read_csv(directory / "m_1-2.csv", index_col=0, encoding="utf-8")
     m_2_3 = pd.read_csv(directory / "m_2-3.csv", index_col=0, encoding="utf-8")
+
     for name, matrix in (("m_1-2", m_1_2), ("m_2-3", m_2_3)):
-        matrix.index = matrix.index.map(
-            lambda value: unicodedata.normalize("NFC", value)
-        )
-        matrix.columns = matrix.columns.map(
-            lambda value: unicodedata.normalize("NFC", str(value))
-        )
+        matrix.index = matrix.index.map(nfc)
+        matrix.columns = matrix.columns.map(lambda value: nfc(str(value)))
+
         if list(matrix.index) != list(ORDER) or list(matrix.columns) != list(ORDER):
             raise ValueError(f"{name}.csv axes must equal alphabet.ORDER")
+
     return m_1_2.astype(bool), m_2_3.astype(bool)
 
 
@@ -72,11 +69,27 @@ def is_allowed(
     m_1_2: pd.DataFrame,
     m_2_3: pd.DataFrame,
 ) -> bool:
-    """Return True when both adjacent pairs are permitted.
+    """Return whether the root ``(first, second, third)`` is permitted.
 
-    A root ``(c1, c2, c3)`` is allowed iff ``M_1-2[c1, c2]`` and
-    ``M_2-3[c2, c3]`` are both true.
+    Args:
+        first: C1 glyph.
+        second: C2 glyph.
+        third: C3 glyph.
+        m_1_2: C1-C2 matrix from :func:`load_matrices`.
+        m_2_3: C2-C3 matrix from :func:`load_matrices`.
+
+    Returns:
+        ``True`` iff ``M_1-2[c1, c2]`` and ``M_2-3[c2, c3]`` are both true.
+
+    Raises:
+        ValueError: If any glyph is outside the 28-consonant inventory.
+
+    Notes:
+        Inputs are NFC-normalized and validated by :func:`normalize_glyph`;
+        the matrices must be indexed by :data:`arabic_roots.alphabet.ORDER`.
     """
-    c1, c2 = _normalize_pair(first, second)
-    _, c3 = _normalize_pair(second, third)
+    c1 = normalize_glyph(first)
+    c2 = normalize_glyph(second)
+    c3 = normalize_glyph(third)
+
     return bool(m_1_2.at[c1, c2]) and bool(m_2_3.at[c2, c3])
