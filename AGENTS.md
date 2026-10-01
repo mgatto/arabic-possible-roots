@@ -16,14 +16,21 @@ src/arabic_roots/
   alphabet.py       # 28-glyph source of truth: ORDER, LETTERS, LOOKUP, CATEGORIES
   phonotactics.py   # load_matrices() + is_allowed(c1,c2,c3,m_1_2,m_2_3)
   enumerator.py     # iter_roots() / count_roots() via itertools.product
+  ingest.py         # build-time root extraction/dedupe (pure, no I/O)
+  transliteration.py# scheme encode/decode (Buckwalter now; DIN/IJMES/IPA later)
+  attestation.py    # load_attested() + is_attested() over data/attested.csv
   statemachine.py   # TriliteralMachine: single-root guard prototype (tests only)
   cli.py            # `enumerate-roots` console script
   __main__.py       # `python -m arabic_roots` delegate to cli.main
 data/m_1-2.csv      # C1–C2 gate, 28×28 bool, all-1 init, diag=1
 data/m_2-3.csv      # C2–C3 gate, same shape/init
+data/attested.csv   # MSA attested roots: c1,c2,c3,variety,source (NFC)
+data/buckwalter.csv # ingest-only encoding table: glyph,buckwalter (28 rows)
+scripts/            # build-time orchestrators (fetch_attested.py)
 docs/running.md     # how to run (commands, failure table, options)
-docs/Future.md      # unimplemented micro-PRDs (attestation, oracle, rendering)
-tests/              # alphabet, matrices, golden-count, cli
+docs/Future.md      # unimplemented micro-PRDs (oracle, rendering)
+docs/Completed.md   # shipped micro-PRDs ledger (date, SHA, evidence)
+tests/              # alphabet, matrices, golden-count, ingest, attestation, cli
 ../Notes/           # Obsidian knowledge bank (outside git, read-only ref)
 ../Media/           # PDFs, IPA scans (outside git)
 ```
@@ -34,6 +41,13 @@ there. `enumerator.py` (`itertools.product` + `is_allowed`) is the batch path
 and the only production enumeration route. `TriliteralMachine` is a
 single-root guard prototype — it validates one triple at a time and is
 exercised by tests only; it is **not** on the enumeration path.
+
+Attestation is a separate axis from phonotactics. `attestation.py` reads
+`data/attested.csv` (MSA triliteral roots: `c1,c2,c3,variety,source`) and
+answers `is_attested(...)`; `ingest.py` holds the pure root extraction/dedupe
+used only at build time by `scripts/fetch_attested.py`, with scheme
+encode/decode in `transliteration.py`. Attested data is a lexicon, not a
+rule: it never feeds `is_allowed`, and `enumerator.py` stays rule-only.
 
 Legacy top-level `Alphabet.py` / `main.py` are superseded and deleted;
 do not reintroduce them. `main.py` had a missing `pandas` import and ASCII
@@ -79,8 +93,14 @@ stub alphabet — ported and fixed under `src/`.
   `alphabet.normalize_glyph` / `is_valid_glyph`.
 - Romanization only at I/O: IPA (`[ħ ʕ q tˤ]`, Thelwall) for reasoning,
   DIN 31635 (`ḥ ṯ ǧ š ṣ ḍ ṭ ẓ ʿ ʾ ġ`) for reversible display, IJMES as output
-  variant. Forbid Buckwalter/Arabizi/`sh|kh|gh|th|dh` keys in code/tests.
-- CSVs: UTF-8, first column + header = glyphs in `ORDER`, cells `0`/`1`.
+  variant. Forbid Buckwalter/Arabizi/`sh|kh|gh|th|dh` in code and tests — the
+  **one** exception is `data/buckwalter.csv`, an external ingest-encoding
+  table (`glyph,buckwalter`) read only by `scripts/fetch_attested.py`; no
+  Buckwalter literal ever appears in `.py` (see §7).
+- CSVs: UTF-8/NFC, LF. Matrices: first column + header = glyphs in `ORDER`,
+  cells `0`/`1`. `data/attested.csv`: header `c1,c2,c3,variety,source`, glyph
+  cells in `ORDER`. `data/buckwalter.csv`: header `glyph,buckwalter`, glyph
+  column exactly `ORDER`.
 
 ## 5. Quality gates (must pass before commit)
 
@@ -121,6 +141,11 @@ uv run enumerate-roots --limit 5
 - Data access: `load_matrices()` defaults to `<repo>/data`; pass `data_dir`
   explicitly in tests via `tmp_path`.
 - Matrix edits: change CSV + add pinning test + cite source in the same commit.
+- Attested data: `load_attested()` likewise defaults to `<repo>/data`.
+  Regenerate `data/attested.csv` only via
+  `uv run python scripts/fetch_attested.py` (pinned upstream SHA); never edit
+  it by hand. Re-pin the golden count in `tests/test_attestation.py` when the
+  source SHA changes.
 - CLI: `uv run enumerate-roots --data-dir data --limit 10 [--output roots.tsv]`
   (alt: `uv run python -m arabic_roots …`); never `python enumerate-roots`
   (not a file — it is a console script). See `docs/running.md`.

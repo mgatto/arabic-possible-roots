@@ -47,6 +47,24 @@ tab-separated):
 | `--limit` | `10` | How many sample roots to print (`0` prints none) |
 | `--output` | none | Optional UTF-8 NFC TSV path for the full enumeration |
 
+## Attested roots (`data/attested.csv`)
+
+`data/attested.csv` holds the 3,959 MSA triliteral roots derived from
+[CAMeL-Lab/ArabicChainBank](https://github.com/CAMeL-Lab/ArabicChainBank) at a
+pinned commit. It is regenerated build-time from upstream `lemmas.csv`,
+decoding the Buckwalter `ROOT` column with `data/buckwalter.csv` (the only
+place Buckwalter is allowed — see AGENTS.md §4):
+
+```bash
+uv run python scripts/fetch_attested.py                     # pinned raw URL
+uv run python scripts/fetch_attested.py --lemmas /tmp/lemmas.csv --sha <sha>
+```
+
+The runtime loader is `arabic_roots.attestation.load_attested()`; query one
+triple with `is_attested(c1, c2, c3, attested, variety="msa")`. Re-pin the
+golden count in `tests/test_attestation.py` only when the upstream SHA changes.
+Do not edit `data/attested.csv` by hand.
+
 ## Unicode note
 
 Roots print as literal Arabic glyphs. Use a terminal that renders Arabic,

@@ -26,6 +26,7 @@ from arabic_roots.alphabet import ORDER
 __all__ = ["DATA_DIR", "default_data_dir", "is_allowed", "load_matrices"]
 
 
+# TODO this is weird to have a whole function for it.
 def default_data_dir() -> Path:
     """Return ``<repo>/data`` regardless of the caller's working directory."""
     return Path(__file__).resolve().parents[2] / "data"
@@ -41,6 +42,7 @@ def _normalize_pair(first: str, second: str) -> tuple[str, str]:
     )
 
 
+# TODO could rename to load_transitions()
 def load_matrices(data_dir: Path | None = None) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Load ``m_1-2.csv`` and ``m_2-3.csv`` as boolean DataFrames.
 

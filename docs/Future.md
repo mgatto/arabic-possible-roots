@@ -9,6 +9,8 @@ data claim needs a citable source plus a regression test.
 
 ## PRD 1 — Attested-roots data source (MSA + Classical; dialects later)
 
+> **Implemented (2026-09-29) — see `docs/Completed.md`.** Kept below as history.
+
 ### Background
 
 Today the repo can say whether a triple is *phonotactically legal*
@@ -68,6 +70,32 @@ project's core concept.
   (attested in one, absent in another) recorded?
 - Weak roots (containing و / ي): store surface form only, or also
   underlying etymological form?
+
+### Alternative / complementary source to evaluate — lisan345
+
+[git85hub/lisan345](https://github.com/git85hub/lisan345) may be a more
+appropriate source for the Classical list: a complete root inventory extracted
+from *Lisān al-ʿArab*, with **6,529** triliteral roots (plus 2,551
+quadriliteral and 183 quinquiliteral). Each CSV row carries the root in Arabic
+(`LAB_ar`) and transliteration (`LAB_tr`) plus per-consonant place/manner
+codes (`C1…`, `P1…`, `M1…`).
+
+Why it is attractive:
+
+- `LAB_ar` is Arabic script, so ingest needs no Buckwalter decode at all —
+  it sidesteps the `data/buckwalter.csv` exception entirely.
+- It is the full *Lisān al-ʿArab* (Classical) inventory, not MSA, so it fits a
+  new `variety` value rather than replacing the `msa` rows.
+- Its place/manner columns are citable evidence (Watson, *The Phonology and
+  Morphology of Arabic*, p. 13) that could justify specific `0`s in
+  `m_1-2.csv` / `m_2-3.csv`, alongside Ryder.
+
+Before committing any derived CSV: verify the license (not stated in the
+README), pin the upstream commit, and decide whether lisan345 supplements or
+supersedes ArabicChainBank as the Classical source. Citation: Elmaz, Orhan.
+2026. *Lisan345*. http://github.com/git85hub/lisan345; also Elmaz, *Studien zu
+den koranischen Hapaxlegomena unikaler Wurzeln* (Harrassowitz, 2011),
+303–317.
 
 ---
 

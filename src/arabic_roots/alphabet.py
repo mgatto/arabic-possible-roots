@@ -36,6 +36,7 @@ __all__ = [
 ]
 
 
+# TODO shouldn't this be a dataclass?
 class Letter(NamedTuple):
     """One row of the alphabet table."""
 
@@ -48,7 +49,11 @@ class Letter(NamedTuple):
     emphatic: bool  # Pharyngealized (emphatic) consonant.
 
 
+# TODO maybe this should be a data file, else data like `buckwalter.csv` should be
+#  hard-coded Python datastructures instead?
 LETTERS: tuple[Letter, ...] = (
+    # TODO maybe this should have features as headers and 1/0 as the data cell
+    #  = one-shot encoding instead of string labels?
     Letter("ء", "hamza", "ʔ", "ʾ", "glottal", "stop", False),
     Letter("ب", "baa", "b", "b", "bilabial", "stop", False),
     Letter("ت", "taa", "t", "t", "dental", "stop", False),
@@ -89,6 +94,7 @@ LOOKUP: frozendict[str, Letter] = frozendict(
 )
 
 # Convenience groupings derived from LETTERS (replaces the old empty stub).
+# TODO recode for McCarthy's excluding categories
 CATEGORIES: frozendict[str, tuple[str, ...]] = frozendict(
     {
         "bilabials": tuple(
