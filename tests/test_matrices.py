@@ -43,11 +43,12 @@ def test_successors_lists_true_columns_in_order(tmp_path: Path) -> None:
 def test_csv_roundtrip_nfc(tmp_path: Path) -> None:
     """Matrices written as UTF-8 CSVs reload with NFC axes intact."""
     target = tmp_path / "data"
-    target.mkdir()
+    rules = target / "rules"
+    rules.mkdir(parents=True)
     order = [unicodedata.normalize("NFC", glyph) for glyph in ORDER]
     for name in ("m_1-2", "m_2-3"):
         frame = pd.DataFrame(1, index=order, columns=order)
-        frame.to_csv(target / f"{name}.csv", encoding="utf-8")
+        frame.to_csv(rules / f"{name}.csv", encoding="utf-8")
     m_1_2, m_2_3 = load_matrices(target)
     assert list(m_1_2.index) == order
     assert list(m_2_3.columns) == order
@@ -59,9 +60,10 @@ def test_bad_axes_rejected(tmp_path: Path) -> None:
     bad = pd.DataFrame(1, index=order, columns=order)
     bad.columns = [f"X{value}" for value in order]
     target = tmp_path / "bad"
-    target.mkdir()
-    bad.to_csv(target / "m_1-2.csv", encoding="utf-8")
+    rules = target / "rules"
+    rules.mkdir(parents=True)
+    bad.to_csv(rules / "m_1-2.csv", encoding="utf-8")
     good = pd.DataFrame(1, index=order, columns=order)
-    good.to_csv(target / "m_2-3.csv", encoding="utf-8")
+    good.to_csv(rules / "m_2-3.csv", encoding="utf-8")
     with pytest.raises(ValueError, match="axes must equal"):
         load_matrices(target)

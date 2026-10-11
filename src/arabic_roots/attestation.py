@@ -1,10 +1,11 @@
-"""Attested-root lookup loaded from ``data/attested.csv``.
+"""Attested-root lookup loaded from ``data/roots/attested.csv``.
 
 Runtime counterpart to :mod:`arabic_roots.arabic_chain_bank_provider`. The CSV
 holds one row per ``(variety, c1, c2, c3)`` with literal Arabic glyphs from
 :data:`arabic_roots.alphabet.ORDER` and a ``source`` citation. This module
-mirrors :mod:`arabic_roots.phonotactics`: default ``<repo>/data``, an
-explicit ``data_dir`` for tests, and loud validation of malformed rows.
+mirrors :mod:`arabic_roots.phonotactics`: default ``<repo>/data`` (reading its
+``roots/`` sub-directory), an explicit ``data_dir`` for tests, and loud
+validation of malformed rows.
 """
 
 from collections.abc import Mapping
@@ -16,7 +17,10 @@ from frozendict import frozendict
 from arabic_roots.alphabet import normalize_glyph
 from arabic_roots.phonotactics import DATA_DIR
 
-__all__ = ["load_attested", "is_attested"]
+__all__ = ["ROOTS_SUBDIR", "load_attested", "is_attested"]
+
+#: Sub-directory of the data root holding the attested-roots lexicon.
+ROOTS_SUBDIR: str = "roots"
 
 _REQUIRED_COLUMNS: frozenset[str] = frozenset({"c1", "c2", "c3", "variety", "source"})
 
@@ -27,7 +31,8 @@ def load_attested(
     """Load ``attested.csv`` as a variety -> frozenset of triples map.
 
     Args:
-        data_dir: Directory holding ``attested.csv``. Defaults to
+        data_dir: Data root holding the ``roots/`` sub-directory with
+            ``attested.csv``. Defaults to
             :data:`arabic_roots.phonotactics.DATA_DIR`.
 
     Returns:
@@ -42,7 +47,7 @@ def load_attested(
         Every row is validated and deduplicated per ``(variety, c1, c2, c3)``;
         this is a lexicon lookup, never a phonotactic rule source.
     """
-    directory = data_dir if data_dir is not None else DATA_DIR
+    directory = (data_dir if data_dir is not None else DATA_DIR) / ROOTS_SUBDIR
     frame = pd.read_csv(
         directory / "attested.csv",
         dtype=str,

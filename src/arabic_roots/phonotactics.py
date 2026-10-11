@@ -18,7 +18,7 @@ That asymmetry is an evidence-based rule, not a default.
 
 Prohibitions from Ryder (*Arabic: A Linguistic Introduction*, owned copy) are
 added one pair at a time, each with a ``TODO(Ryder:p.X)`` or page citation,
-plus a regression test. Rules live only in ``data/*.csv``; this module derives
+plus a regression test. Rules live only in ``data/rules/*.csv``; this module derives
 per-glyph successor lists from them via :func:`successors` and never encodes
 rules itself.
 """
@@ -30,17 +30,21 @@ from frozendict import frozendict
 
 from arabic_roots.alphabet import ORDER, nfc
 
-__all__ = ["DATA_DIR", "load_matrices", "successors"]
+__all__ = ["DATA_DIR", "RULES_SUBDIR", "load_matrices", "successors"]
 
 #: Default ``<repo>/data`` regardless of the caller's working directory.
 DATA_DIR: Path = Path(__file__).resolve().parents[2] / "data"
+
+#: Sub-directory of the data root holding the co-occurrence matrices.
+RULES_SUBDIR: str = "rules"
 
 
 def load_matrices(data_dir: Path | None = None) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Load ``m_1-2.csv`` and ``m_2-3.csv`` as boolean DataFrames.
 
     Args:
-        data_dir: Directory holding the two CSVs. Defaults to :data:`DATA_DIR`.
+        data_dir: Data root holding the ``rules/`` sub-directory with the two
+            CSVs. Defaults to :data:`DATA_DIR`.
 
     Returns:
         ``(m_1_2, m_2_3)`` boolean frames whose index and columns are exactly
@@ -55,7 +59,7 @@ def load_matrices(data_dir: Path | None = None) -> tuple[pd.DataFrame, pd.DataFr
         Axis labels are NFC-normalized before the ORDER check, so CSV files
         written on any platform validate identically.
     """
-    directory = data_dir if data_dir is not None else DATA_DIR
+    directory = (data_dir if data_dir is not None else DATA_DIR) / RULES_SUBDIR
 
     m_1_2 = pd.read_csv(directory / "m_1-2.csv", index_col=0, encoding="utf-8")
     m_2_3 = pd.read_csv(directory / "m_2-3.csv", index_col=0, encoding="utf-8")

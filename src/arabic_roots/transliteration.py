@@ -3,8 +3,8 @@
 A *scheme* maps the 28 Arabic glyphs in :data:`arabic_roots.alphabet.ORDER`
 to/from an external symbol set. The only scheme today is the ingest encoding
 used by CAMeL-Lab/ArabicChainBank (Buckwalter), stored in
-``data/buckwalter.csv``; output schemes (DIN 31635, IJMES, IPA — see
-``docs/Future.md`` PRD 3) belong here too.
+``data/transliterations/buckwalter.csv``; output schemes (DIN 31635, IJMES,
+IPA — see ``docs/Future.md`` PRD 3) belong here too.
 
 The mapping is data, not code: scheme symbols come from CSV and never appear
 as Python literals (AGENTS.md §4). Decoding turns symbols into inventory

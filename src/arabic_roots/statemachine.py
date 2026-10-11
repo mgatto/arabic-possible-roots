@@ -6,7 +6,7 @@ walks the ``M_1-2``/``M_2-3`` successor lists). It validates
 one ``(c1, c2, c3)`` triple at a time, walking ``r_0 -> r_1 -> r_2 -> r_3``
 with each transition guarded by a lookup into the caller's M_1-2/M_2-3 matrices
 (see :mod:`arabic_roots.phonotactics`). Rule changes happen in
-``data/m_1-2.csv`` / ``data/m_2-3.csv``, never here.
+``data/rules/m_1-2.csv`` / ``data/rules/m_2-3.csv``, never here.
 """
 
 from typing import Any

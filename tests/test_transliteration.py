@@ -14,7 +14,9 @@ from arabic_roots.transliteration import (
     encode_root,
 )
 
-_MAP_PATH = Path(__file__).resolve().parents[1] / "data" / "buckwalter.csv"
+_MAP_PATH = (
+    Path(__file__).resolve().parents[1] / "data" / "transliterations" / "buckwalter.csv"
+)
 
 
 def _real_decoder() -> Mapping[str, str]:

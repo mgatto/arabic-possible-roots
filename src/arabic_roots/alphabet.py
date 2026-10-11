@@ -86,7 +86,7 @@ class Letter(NamedTuple):
 # Kept as a typed Python literal (not a CSV): it is Unicode-native reference
 # data, not a phonotactic rule. Only the matrices are CSV because they are
 # edited with page citations; the external Buckwalter scheme lives in
-# data/buckwalter.csv to keep its symbols out of .py (AGENTS.md §4).
+# data/transliterations/buckwalter.csv to keep its symbols out of .py (AGENTS.md §4).
 LETTERS: tuple[Letter, ...] = (
     Letter("ء", "hamza", "ʔ", "ʾ", Place.GLOTTAL, Manner.STOP, False),
     Letter("ب", "baa", "b", "b", Place.BILABIAL, Manner.STOP, False),

@@ -138,3 +138,52 @@ there and a full entry here.
   - `C1 ≠ C2` homorganic sub-rule (Greenberg 1950 p.162) is still unencoded.
   - PRD 2 oracle, PRD 3 rendering, PRD 4 natural classes, PRD 5 branded glyph
     remain open.
+
+---
+
+## PRD 6 — Data directory layout (`roots/`, `rules/`, `transliterations/`)
+
+- **Completed:** 2026-10-11
+- **Commit:** TBD (agent does not commit; fill in after merge)
+- **Summary:** Split the flat `data/` directory into three typed
+  sub-directories so the axes AGENTS.md §2 keeps apart are physically
+  separated: `data/roots/attested.csv` (lexicon),
+  `data/rules/{m_1-2,m_2-3}.csv` (phonotactic rules), and
+  `data/transliterations/buckwalter.csv` (ingest-only encoding table). The
+  public API is unchanged: `--data-dir` / `DATA_DIR` remain the data *root*,
+  and each loader appends its own sub-directory. File bytes are unchanged, so
+  pinned counts (`21168` allowed, `3959` attested) are identical.
+- **Deliverables:**
+  - Moved `data/attested.csv` → `data/roots/attested.csv`,
+    `data/m_1-2.csv` + `data/m_2-3.csv` → `data/rules/`,
+    `data/buckwalter.csv` → `data/transliterations/`.
+  - `src/arabic_roots/phonotactics.py` — added `RULES_SUBDIR = "rules"`;
+    `load_matrices()` reads `<data_dir>/rules/`.
+  - `src/arabic_roots/attestation.py` — added `ROOTS_SUBDIR = "roots"`;
+    `load_attested()` reads `<data_dir>/roots/`.
+  - `scripts/fetch_attested.py` — default out/map paths updated.
+  - Docstrings/paths updated: `cli.py`, `statemachine.py`, `transliteration.py`,
+    `alphabet.py`, `arabic_chain_bank_provider.py`.
+  - Tests updated for the new layout (`test_matrices.py`, `test_attestation.py`,
+    `test_transliteration.py`, `test_arabic_chain_bank_provider.py`).
+  - Docs: `AGENTS.md` (tree, §2, §4, §7), `docs/running.md`,
+    `docs/Future.md` (PRD 6 + path references).
+- **Acceptance evidence:**
+  - `uv run pytest` — 46 passed; total coverage 99.63%.
+  - Counts unchanged: `uv run enumerate-roots --limit 5` logs
+    `Allowed triliteral roots: 21168`; attested golden `3959`.
+  - `uv run ruff check src tests scripts`, `ruff format --check`,
+    `mypy src tests`, `uv run ty check` all clean.
+- **Deviations:**
+  - None; files were moved with plain `mv` (agent does not stage/commit), so
+    git records the renames at the human's next `git add`.
+- **Resolved open questions (decisions):**
+  - The data root stays `<repo>/data`; `--data-dir` names the root, not a
+    sub-directory. The split is expressed with per-module sub-directory
+    constants (`RULES_SUBDIR`, `ROOTS_SUBDIR`) rather than a shared registry.
+  - The ingest-only Buckwalter exception (AGENTS §4) now points at
+    `data/transliterations/buckwalter.csv`.
+- **Follow-ups:**
+  - Attested-root subtraction (from the enumeration-rewrite entry) is
+    unaffected: `load_attested()` resolves its new path internally, so the
+    planned filter layer needs no change.

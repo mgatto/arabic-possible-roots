@@ -2,7 +2,7 @@
 
 Build-time only: this module performs no network or filesystem I/O. The
 ``scripts/fetch_attested.py`` orchestrator reads upstream ``lemmas.csv`` and
-the encoding table, then writes ``data/attested.csv`` using these helpers, so
+the encoding table, then writes ``data/roots/attested.csv`` using these helpers, so
 the transform stays unit-testable without the 2.5 MB source file.
 
 Upstream (CAMeL-Lab/ArabicChainBank, ``data/lemmas.csv``) exposes the root
@@ -56,7 +56,7 @@ REASON_NOT_THREE: str = "not-three-consonants"
 #: Reason a root string was dropped: a symbol is not in the scheme.
 REASON_OUT_OF_INVENTORY: str = "out-of-inventory"
 
-#: Output CSV header for ``data/attested.csv``.
+#: Output CSV header for ``data/roots/attested.csv``.
 FIELDNAMES: tuple[str, ...] = ("c1", "c2", "c3", "variety", "source")
 
 #: ``ORDER`` rank per glyph, so sorting is O(1) per consonant.
@@ -64,7 +64,7 @@ _RANK: dict[str, int] = {glyph: index for index, glyph in enumerate(ORDER)}
 
 
 class AttestedRow(NamedTuple):
-    """One row of ``data/attested.csv``."""
+    """One row of ``data/roots/attested.csv``."""
 
     c1: str
     c2: str

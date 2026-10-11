@@ -13,7 +13,9 @@ from arabic_roots.arabic_chain_bank_provider import (
 )
 from arabic_roots.transliteration import build_decoder, build_encoder, encode_root
 
-_MAP_PATH = Path(__file__).resolve().parents[1] / "data" / "buckwalter.csv"
+_MAP_PATH = (
+    Path(__file__).resolve().parents[1] / "data" / "transliterations" / "buckwalter.csv"
+)
 
 
 def _real_decoder() -> Mapping[str, str]:

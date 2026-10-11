@@ -1,12 +1,12 @@
-"""Derive ``data/attested.csv`` from CAMeL-Lab/ArabicChainBank.
+"""Derive ``data/roots/attested.csv`` from CAMeL-Lab/ArabicChainBank.
 
 Build-time orchestrator around
 :mod:`arabic_roots.arabic_chain_bank_provider`. Upstream ``lemmas.csv`` is
 never vendored: this script reads it from a commit-pinned raw GitHub URL (or
 a local ``--lemmas`` path), decodes the Buckwalter ``ROOT`` column with
-``data/buckwalter.csv``, and writes the committed ``data/attested.csv``.
-Re-run only when the pinned commit changes, then re-pin the golden count in
-``tests/test_attestation.py``.
+``data/transliterations/buckwalter.csv``, and writes the committed
+``data/roots/attested.csv``. Re-run only when the pinned commit changes, then
+re-pin the golden count in ``tests/test_attestation.py``.
 
 Usage::
 
@@ -31,8 +31,8 @@ from arabic_roots.arabic_chain_bank_provider import (
 from arabic_roots.transliteration import build_decoder
 
 REPO_ROOT: Path = Path(__file__).resolve().parents[1]
-DEFAULT_OUTPUT: Path = REPO_ROOT / "data" / "attested.csv"
-DEFAULT_MAP: Path = REPO_ROOT / "data" / "buckwalter.csv"
+DEFAULT_OUTPUT: Path = REPO_ROOT / "data" / "roots" / "attested.csv"
+DEFAULT_MAP: Path = REPO_ROOT / "data" / "transliterations" / "buckwalter.csv"
 
 
 def _read_text(source: str) -> str:
@@ -60,7 +60,10 @@ def build_parser() -> argparse.ArgumentParser:
         "--map",
         type=Path,
         default=DEFAULT_MAP,
-        help="Buckwalter->glyph table (default: <repo>/data/buckwalter.csv).",
+        help=(
+            "Buckwalter->glyph table "
+            "(default: <repo>/data/transliterations/buckwalter.csv)."
+        ),
     )
     parser.add_argument(
         "--variety",
@@ -71,7 +74,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--out",
         type=Path,
         default=DEFAULT_OUTPUT,
-        help="Destination CSV (default: <repo>/data/attested.csv).",
+        help="Destination CSV (default: <repo>/data/roots/attested.csv).",
     )
     return parser
 

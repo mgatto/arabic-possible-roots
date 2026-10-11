@@ -28,8 +28,9 @@ allowed roots, i.e. visits exactly the triples where `M_1-2[c1, c2]` and
 
 ### Current data state (drives the expected counts)
 
-`data/m_1-2.csv` now has a **zeroed diagonal** (C1 == C2 gemination forbidden);
-`data/m_2-3.csv` still has an all-`1` diagonal (C2 == C3 gemination permitted).
+`data/rules/m_1-2.csv` now has a **zeroed diagonal** (C1 == C2 gemination
+forbidden); `data/rules/m_2-3.csv` still has an all-`1` diagonal (C2 == C3
+gemination permitted).
 Read-only measurement:
 
 - `m_1-2` diagonal `0` for all 28 glyphs → every `c1 == c2` triple removed →
@@ -191,7 +192,7 @@ an evidence-based rule (Greenberg 1950, WORD 6:2, p.162). See
 
 ## Follow-ups regardless of choice
 
-- `data/m_1-2.csv` diagonal rule needs a citation and a pinning regression
+- `data/rules/m_1-2.csv` diagonal rule needs a citation and a pinning regression
   test (AGENTS §3/§7); `phonotactics.py` docstring and AGENTS §1/§2 currently
   state "diagonal is `1` / gemination permitted", which is now wrong for
   C1-C2.

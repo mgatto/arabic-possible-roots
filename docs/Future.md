@@ -1,7 +1,7 @@
 # Future work — micro-PRDs
 
 Proposed features only; nothing here is implemented yet. Each PRD respects
-the standing rules in `AGENTS.md`: rules live in `data/*.csv`, the state
+the standing rules in `AGENTS.md`: rules live in `data/rules/*.csv`, the state
 machine queries data but encodes no rules, files are UTF-8/NFC, and every
 data claim needs a citable source plus a regression test.
 
@@ -35,10 +35,11 @@ project's core concept.
 
 ### Proposed design
 
-- New files `data/attested_msa.csv` and `data/attested_classical.csv`
-  (one row per root: `c1,c2,c3,source`), or a single `data/attested.csv`
-  with a `variety` column (`msa` | `classical`) — decide at implementation
-  time; the single file is preferred for one dedupe pass.
+- New files `data/roots/attested_msa.csv` and
+  `data/roots/attested_classical.csv` (one row per root: `c1,c2,c3,source`),
+  or a single `data/roots/attested.csv` with a `variety` column
+  (`msa` | `classical`) — decide at implementation time; the single file is
+  preferred for one dedupe pass.
 - Schema rules: glyphs literal UTF-8/NFC from `alphabet.ORDER` (hamza =
   `ء U+0621`, no carriers, no bare alif); one NFC-normalized row per root
   per variety; `source` column cites the lexicon (e.g. Wehr, Lane,
@@ -83,12 +84,12 @@ codes (`C1…`, `P1…`, `M1…`).
 Why it is attractive:
 
 - `LAB_ar` is Arabic script, so ingest needs no Buckwalter decode at all —
-  it sidesteps the `data/buckwalter.csv` exception entirely.
+  it sidesteps the `data/transliterations/buckwalter.csv` exception entirely.
 - It is the full *Lisān al-ʿArab* (Classical) inventory, not MSA, so it fits a
   new `variety` value rather than replacing the `msa` rows.
 - Its place/manner columns are citable evidence (Watson, *The Phonology and
   Morphology of Arabic*, p. 13) that could justify specific `0`s in
-  `m_1-2.csv` / `m_2-3.csv`, alongside Ryder.
+  `data/rules/m_1-2.csv` / `data/rules/m_2-3.csv`, alongside Ryder.
 
 Before committing any derived CSV: verify the license (not stated in the
 README), pin the upstream commit, and decide whether lisan345 supplements or
@@ -215,8 +216,9 @@ hand-enumerated pairs.
   source (candidate: McCarthy 1986/1994; Watson, *The Phonology and Morphology
   of Arabic*, p. 13; cf. PRD 1's lisan345 `C1…`/`P1…`/`M1…` columns).
 - Correct the sibilant inventory (exclude `ض`, `ظ`) and pin it with a test.
-- For each class-based `0` added to `m_1-2.csv` / `m_2-3.csv`, add the page
-  citation and a regression test in the same commit.
+- For each class-based `0` added to `data/rules/m_1-2.csv` /
+  `data/rules/m_2-3.csv`, add the page citation and a regression test in the
+  same commit.
 
 ### Tests
 
@@ -292,3 +294,63 @@ normalized"; a brand can.
 - Should `is_allowed` accept raw `str` for ergonomics (normalizing internally)
   or require `NormalizedGlyph` for strictness?
 - Does the brand live in `alphabet.py` or a dedicated `types.py`?
+
+---
+
+## PRD 6 — Data directory layout (`roots/`, `rules/`, `transliterations/`)
+
+> **Implemented (2026-10-11) — see `docs/Completed.md`.** Kept below as history.
+
+### Background
+
+`data/` had grown into a flat mix of three semantically different artifact
+kinds: a lexicon (`attested.csv`), phonotactic rules (`m_1-2.csv`,
+`m_2-3.csv`), and an ingest-only encoding table (`buckwalter.csv`). A flat
+directory makes it easy to conflate the axes AGENTS.md §2 keeps apart — rules
+vs. lexicon vs. transliteration — and the empty `roots/`, `rules/`,
+`transliterations/` sub-directories already sketched the intended split.
+
+### Goals
+
+- Move each artifact into its typed sub-directory under `data/`:
+  - `data/roots/attested.csv` — attested-roots lexicon.
+  - `data/rules/m_1-2.csv`, `data/rules/m_2-3.csv` — phonotactic matrices.
+  - `data/transliterations/buckwalter.csv` — ingest-only encoding table.
+- Keep the public API stable: `--data-dir` / `DATA_DIR` stay the data *root*;
+  loaders append their own sub-directory.
+
+### Non-goals
+
+- Renaming files or changing their schemas (bytes are unchanged).
+- Splitting `load_matrices` / `load_attested` into per-file loaders.
+- Introducing a data-registry abstraction; module-local sub-directory
+  constants suffice.
+
+### Proposed design
+
+- `phonotactics.RULES_SUBDIR = "rules"`; `load_matrices(data_dir)` reads
+  `data_dir / RULES_SUBDIR / {m_1-2,m_2-3}.csv`.
+- `attestation.ROOTS_SUBDIR = "roots"`; `load_attested(data_dir)` reads
+  `data_dir / ROOTS_SUBDIR / "attested.csv"`.
+- `scripts/fetch_attested.py` defaults to
+  `data/roots/attested.csv` (out) and
+  `data/transliterations/buckwalter.csv` (map).
+- Tests build the sub-directory under `tmp_path` before writing fixtures.
+
+### Tests
+
+- `tests/test_matrices.py` and `tests/test_attestation.py` write into the
+  sub-directory and reload through the public loaders.
+- `tests/test_transliteration.py` and `tests/test_arabic_chain_bank_provider.py`
+  point `_MAP_PATH` at `data/transliterations/buckwalter.csv`.
+
+### Acceptance criteria
+
+- `ruff`, `ruff format --check`, `mypy --strict`, `ty check`, `pytest` green.
+- Counts unchanged: `21168` allowed roots; `3959` attested MSA roots.
+
+### Resolved open questions
+
+- The data root stays `<repo>/data`; `--data-dir` continues to name the root,
+  not a sub-directory. Per-module sub-directory constants keep the split
+  explicit without a shared registry.

@@ -15,6 +15,7 @@ _HEADER = ["c1", "c2", "c3", "variety", "source"]
 
 
 def _write(path: Path, rows: list[list[str]]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.writer(handle, lineterminator="\n")
         writer.writerow(_HEADER)
@@ -58,7 +59,7 @@ def test_invalid_glyph_raises() -> None:
 def test_tmp_path_roundtrip(tmp_path: Path) -> None:
     """A minimal CSV loads with per-variety grouping."""
     _write(
-        tmp_path / "attested.csv",
+        tmp_path / "roots" / "attested.csv",
         [["ب", "ت", "ث", "msa", "unit-test"], ["ب", "ت", "ث", "classical", "unit"]],
     )
     attested = load_attested(tmp_path)
@@ -69,7 +70,7 @@ def test_tmp_path_roundtrip(tmp_path: Path) -> None:
 def test_duplicate_rows_rejected(tmp_path: Path) -> None:
     """Two identical (variety, c1, c2, c3) rows raise."""
     _write(
-        tmp_path / "attested.csv",
+        tmp_path / "roots" / "attested.csv",
         [["ب", "ت", "ث", "msa", "a"], ["ب", "ت", "ث", "msa", "b"]],
     )
     with pytest.raises(ValueError, match="duplicate attested row"):
@@ -78,7 +79,8 @@ def test_duplicate_rows_rejected(tmp_path: Path) -> None:
 
 def test_missing_columns_rejected(tmp_path: Path) -> None:
     """A CSV without the required columns raises."""
-    target = tmp_path / "attested.csv"
+    target = tmp_path / "roots" / "attested.csv"
+    target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text("c1,c2,variety\nب,ت,msa\n", encoding="utf-8")
     with pytest.raises(ValueError, match="missing columns"):
         load_attested(tmp_path)

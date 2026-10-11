@@ -22,14 +22,14 @@ src/arabic_roots/
   enumerator.py     # iter_roots() / count_roots() via matrix-successor walk (memoized)
   arabic_chain_bank_provider.py # ArabicChainBank build-time extraction/dedupe (pure, no I/O)
   transliteration.py# scheme encode/decode (Buckwalter now; DIN/IJMES/IPA later)
-  attestation.py    # load_attested() + is_attested() over data/attested.csv
+  attestation.py    # load_attested() + is_attested() over data/roots/attested.csv
   statemachine.py   # TriliteralMachine: single-root guard prototype (tests only)
   cli.py            # `enumerate-roots` console script
   __main__.py       # `python -m arabic_roots` delegate to cli.main
-data/m_1-2.csv      # C1–C2 gate, 28×28 bool, diag=0 (C1≠C2, Greenberg 1950 p.162)
-data/m_2-3.csv      # C2–C3 gate, 28×28 bool, diag=1 (C2=C3 permitted)
-data/attested.csv   # MSA attested roots: c1,c2,c3,variety,source (NFC)
-data/buckwalter.csv # ingest-only encoding table: glyph,buckwalter (28 rows)
+data/rules/m_1-2.csv            # C1–C2 gate, 28×28 bool, diag=0 (C1≠C2, Greenberg 1950 p.162)
+data/rules/m_2-3.csv            # C2–C3 gate, 28×28 bool, diag=1 (C2=C3 permitted)
+data/roots/attested.csv         # MSA attested roots: c1,c2,c3,variety,source (NFC)
+data/transliterations/buckwalter.csv # ingest-only encoding table: glyph,buckwalter (28 rows)
 scripts/            # build-time orchestrators (fetch_attested.py)
 docs/running.md     # how to run (commands, failure table, options)
 docs/Future.md      # unimplemented micro-PRDs (oracle, rendering)
@@ -39,7 +39,7 @@ tests/              # alphabet, matrices, golden-count, chain-bank, attestation,
 ../Media/           # PDFs, IPA scans (outside git)
 ```
 
-Rules live **only** in `data/*.csv`. `statemachine.py` carries literals and
+Rules live **only** in `data/rules/*.csv`. `statemachine.py` carries literals and
 queries matrices in `pair12_allowed` / `pair23_allowed`; never add rule logic
 there. `phonotactics.successors()` turns each matrix into per-glyph successor
 lists, and `enumerator.py` walks those lists (never generating a forbidden
@@ -49,7 +49,7 @@ single-root guard prototype — it validates one triple at a time and is
 exercised by tests only; it is **not** on the enumeration path.
 
 Attestation is a separate axis from phonotactics. `attestation.py` reads
-`data/attested.csv` (MSA triliteral roots: `c1,c2,c3,variety,source`) and
+`data/roots/attested.csv` (MSA triliteral roots: `c1,c2,c3,variety,source`) and
 answers `is_attested(...)`; `arabic_chain_bank_provider.py` holds the pure
 root extraction/dedupe used only at build time by `scripts/fetch_attested.py`,
 with scheme encode/decode in `transliteration.py`. Attested data is a lexicon,
@@ -105,12 +105,14 @@ stub alphabet — ported and fixed under `src/`.
 - Romanization only at I/O: IPA (`[ħ ʕ q tˤ]`, Thelwall) for reasoning,
   DIN 31635 (`ḥ ṯ ǧ š ṣ ḍ ṭ ẓ ʿ ʾ ġ`) for reversible display, IJMES as output
   variant. Forbid Buckwalter/Arabizi/`sh|kh|gh|th|dh` in code and tests — the
-  **one** exception is `data/buckwalter.csv`, an external ingest-encoding
-  table (`glyph,buckwalter`) read only by `scripts/fetch_attested.py`; no
-  Buckwalter literal ever appears in `.py` (see §7).
-- CSVs: UTF-8/NFC, LF. Matrices: first column + header = glyphs in `ORDER`,
-  cells `0`/`1`. `data/attested.csv`: header `c1,c2,c3,variety,source`, glyph
-  cells in `ORDER`. `data/buckwalter.csv`: header `glyph,buckwalter`, glyph
+  **one** exception is `data/transliterations/buckwalter.csv`, an external
+  ingest-encoding table (`glyph,buckwalter`) read only by
+  `scripts/fetch_attested.py`; no Buckwalter literal ever appears in `.py`
+  (see §7).
+- CSVs: UTF-8/NFC, LF. Matrices (`data/rules/`): first column + header = glyphs
+  in `ORDER`, cells `0`/`1`. `data/roots/attested.csv`: header
+  `c1,c2,c3,variety,source`, glyph cells in `ORDER`.
+  `data/transliterations/buckwalter.csv`: header `glyph,buckwalter`, glyph
   column exactly `ORDER`.
 
 ## 5. Quality gates (must pass before commit)
@@ -150,11 +152,12 @@ uv run enumerate-roots --limit 5
 
 - Imports: `from arabic_roots.alphabet import ORDER, normalize_glyph` (never
   `sys.path` hacks; package resolves via `[tool.setuptools.packages.find]`).
-- Data access: `load_matrices()` defaults to `<repo>/data`; pass `data_dir`
-  explicitly in tests via `tmp_path`.
+- Data access: `load_matrices()` defaults to `<repo>/data` and reads its
+  `rules/` sub-directory; pass the data root explicitly in tests via `tmp_path`.
 - Matrix edits: change CSV + add pinning test + cite source in the same commit.
-- Attested data: `load_attested()` likewise defaults to `<repo>/data`.
-  Regenerate `data/attested.csv` only via
+- Attested data: `load_attested()` likewise defaults to `<repo>/data` and reads
+  its `roots/` sub-directory.
+  Regenerate `data/roots/attested.csv` only via
   `uv run python scripts/fetch_attested.py` (pinned upstream SHA); never edit
   it by hand. Re-pin the golden count in `tests/test_attestation.py` when the
   source SHA changes.
