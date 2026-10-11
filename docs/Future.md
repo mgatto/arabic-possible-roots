@@ -499,3 +499,68 @@ Complements the text formats for analysis and downstream tooling.
 
 - Suffix: `.sqlite`, `.db`, or both?
 - Add an `attested` column/table once subtraction lands?
+
+---
+
+## PRD 11 — Run logging (effective options, embedded choices, output summary)
+
+### Background
+
+The CLI logs only counts and the output path ("Allowed triliteral roots: …",
+"Wrote N roots to PATH") plus a warning for attested-but-illegal roots. It does
+not record *which* options were in effect, nor the defaults the program resolved
+on its own (the "embedded choices": `variety=msa`, the format inferred from the
+`--output` suffix, the fixed `ORDER`, and the rule/lexicon file paths). For
+reproducibility and debugging — especially when writing an `--output` file — a
+run should be able to state exactly what it read, what it chose, and what it
+wrote.
+
+### Goals
+
+- Log the **effective CLI options** at run start (`--data-dir`, `--limit`,
+  `--output`, plus future `--scheme`/`--delimiter`/`--variety`), including
+  resolved defaults rather than only user-supplied values.
+- Log the **embedded choices** applied at runtime: `variety` (default `msa`),
+  the output `format` inferred from the suffix, the fixed axis `ORDER`, and the
+  resolved input file paths (`rules/…`, `roots/attested.csv`).
+- Log **output summaries and file names**: allowed count, possible count,
+  excluded-attested count, the illegal-attested warning, and, per written file,
+  its path, format, and row count.
+- Keep the format deterministic and grep-able (stable field order).
+
+### Non-goals (v1)
+
+- File-based logging, rotation, or a `--log-file` option (stderr only, matching
+  today's `basicConfig`); a separate PRD if wanted.
+- Changing stdout (the `--limit` sample) or the `--output` file contents.
+- Any telemetry/audit framework or new dependency.
+
+### Proposed design
+
+- Stdlib `logging` only, to **stderr** (no new deps). No `print()` (AGENTS §5).
+- One deterministic banner line at `INFO`, `key=value` pairs in fixed order:
+  `run: data_dir=… limit=10 output=… format=csv variety=msa`
+  (unset options render as `output=none`, `format=none`).
+- Inputs line(s): resolved rule and lexicon paths (and their pinned counts).
+- Output line(s): `wrote 17211 possible roots to /tmp/roots.csv (csv)`; the
+  existing `Allowed`/`Possible` summaries remain at `INFO`.
+
+### Tests
+
+- `caplog` assertions that the banner contains each option and each resolved
+  choice (including defaults, e.g. `variety=msa`, inferred `format`).
+- Output-summary lines carry the correct allowed/possible/excluded counts.
+- Unknown `--output` suffix still exits `2` and emits no output line.
+- stdout and `--output` files are unchanged (logs stay on stderr).
+
+### Acceptance criteria
+
+- `ruff`, `mypy --strict`, `ty check`, `pytest` green; no new deps; stdout and
+  output files byte-identical to before.
+
+### Open questions
+
+- One `key=value` line, one line per field, or JSON?
+- Add `--log-level`/`--quiet` now, or defer until a second caller wants it?
+- Include input file hashes/pins (e.g. attested SHA) for full reproducibility?
+- Should the banner print only when `--output` is set, or on every run?
