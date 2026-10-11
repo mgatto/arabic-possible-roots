@@ -29,9 +29,26 @@ def test_main_limit_two(capsys: pytest.CaptureFixture[str]) -> None:
 
 
 def test_main_writes_tsv(tmp_path: Path) -> None:
-    """--output writes one NFC triple per line as TSV."""
+    """--output writes a header then one NFC triple per line as TSV."""
     target = tmp_path / "roots.tsv"
     assert main(["--limit", "0", "--output", str(target)]) == 0
     assert target.exists()
-    first = target.read_text(encoding="utf-8").splitlines()[0]
-    assert first == "ء\tب\tء"
+    lines = target.read_text(encoding="utf-8").splitlines()
+    assert lines[0] == "c1\tc2\tc3"
+    assert lines[1] == "ء\tب\tء"
+
+
+def test_main_writes_csv(tmp_path: Path) -> None:
+    """--output infers CSV from the .csv suffix and writes a header."""
+    target = tmp_path / "roots.csv"
+    assert main(["--limit", "0", "--output", str(target)]) == 0
+    lines = target.read_text(encoding="utf-8").splitlines()
+    assert lines[0] == "c1,c2,c3"
+    assert lines[1] == "ء,ب,ء"
+
+
+def test_main_unknown_suffix_errors(tmp_path: Path) -> None:
+    """An unsupported --output suffix exits loudly."""
+    target = tmp_path / "roots.txt"
+    with pytest.raises(SystemExit):
+        main(["--limit", "0", "--output", str(target)])

@@ -45,7 +45,23 @@ tab-separated):
 |--------------|---------------|------------------------------------------------------|
 | `--data-dir` | `<repo>/data` | Data root holding `rules/` (`m_1-2.csv`, `m_2-3.csv`)  |
 | `--limit`    | `10`          | How many sample roots to print (`0` prints none)     |
-| `--output`   | none          | Optional UTF-8 NFC TSV path for the full enumeration |
+| `--output`   | none          | Output path; format inferred from suffix (`.tsv`, `.csv`) |
+
+## Output files
+
+`--output PATH` writes the **full** enumeration (ignoring `--limit`). The
+format is inferred from the suffix:
+
+- `.tsv` — tab-separated, header `c1\tc2\tc3`.
+- `.csv` — comma-separated, header `c1,c2,c3`.
+
+Both are UTF-8/NFC with LF line endings; parent directories are created. An
+unknown or missing suffix is an error (exit code `2`).
+
+```bash
+uv run enumerate-roots --limit 0 --output roots.tsv
+uv run enumerate-roots --limit 0 --output roots.csv
+```
 
 ## Attested roots (`data/roots/attested.csv`)
 

@@ -354,3 +354,148 @@ vs. lexicon vs. transliteration — and the empty `roots/`, `rules/`,
 - The data root stays `<repo>/data`; `--data-dir` continues to name the root,
   not a sub-directory. Per-module sub-directory constants keep the split
   explicit without a shared registry.
+
+---
+
+## PRD 7 — JSONL output format
+
+### Background
+
+`--output` today writes flat, positional text (TSV, plus CSV). Flat formats
+are brittle to extend: adding a field (e.g. an attestation flag) means a new
+column and downstream schema churn. JSON Lines gives one self-describing
+object per root and streams naturally, so a 21k-row enumeration never has to
+be materialized or wrapped in an array.
+
+### Goals
+
+- Add a `.jsonl` output selected by suffix, alongside `.tsv`/`.csv`.
+- Emit one JSON object per line: `{"c1": …, "c2": …, "c3": …}`, keys in fixed
+  order, values as literal NFC glyphs.
+- Stream (constant memory) and keep ORDER-lexicographic order.
+
+### Non-goals (v1)
+
+- A single JSON array document (whole-file) — separate if needed.
+- Nested objects or extra fields (attested/variety/transliteration) — future.
+- Reading JSONL back in (output-only).
+
+### Proposed design
+
+- Register a `_write_jsonl` writer in `writers.py`: `json.dumps({...},
+  ensure_ascii=False)` per line with `\n`. `ensure_ascii=False` keeps Arabic
+  glyphs literal, matching the Unicode-exclusive policy (no `\uXXXX` escapes).
+- The suffix map gains `.jsonl`.
+
+### Tests
+
+- One object per line; parse each line and assert `["c1","c2","c3"]` key order.
+- `ensure_ascii=False`: literal glyph bytes appear (no `\u` escapes).
+- Row count matches the input; order preserved; NFC.
+
+### Acceptance criteria
+
+- `ruff`, `mypy --strict`, `ty check`, `pytest` green; stdlib `json` only.
+
+### Open questions
+
+- Compact separators (`(",", ":")`) or default spacing?
+- Add optional fields now, or keep the object minimal until attestation lands?
+
+---
+
+## PRD 8 — Parquet output format
+
+### Background
+
+TSV/CSV/JSONL are row-oriented text. Columnar Parquet is typed, compressed,
+and the native exchange format for pandas/polars analysis — useful for
+phonotactic statistics, joins with attestation data, and future dataset growth
+(quadriliteral, dialects). The current 21k rows are small, but Parquet keeps
+schema and types explicit.
+
+### Goals
+
+- Add a `.parquet` output selected by suffix.
+- Columns `c1`, `c2`, `c3` (UTF-8 string), NFC glyphs, ORDER-lexicographic row
+  order preserved.
+- Keep the engine optional so the core package gains no mandatory dependency.
+
+### Non-goals (v1)
+
+- Analytics/derived columns; partitioning or multi-file datasets.
+- A read path (output-only).
+
+### Proposed design
+
+- Requires a Parquet engine. pandas ≥ 2.2 writes Parquet via `pyarrow` (or
+  `fastparquet`), so this is a **new dependency** and must be justified per
+  AGENTS §5. Preferred: a `[project.optional-dependencies] output = ["pyarrow"]`
+  extra, so core `uv sync` stays lean; the writer raises a clear error if the
+  engine is missing.
+- `writers.py` builds a small DataFrame and calls `to_parquet`; the suffix map
+  gains `.parquet`.
+
+### Tests
+
+- `pytest.importorskip("pyarrow")`; write then read back, asserting schema
+  (`c1,c2,c3`), row count, first/last rows, and order.
+- A test asserting a clear error when the engine is absent (monkeypatched
+  import).
+
+### Acceptance criteria
+
+- `ruff`, `mypy --strict`, `ty check`, `pytest` green; core `uv sync` unchanged
+  (the extra is opt-in).
+
+### Open questions
+
+- Optional extra vs. a core dependency (justify per AGENTS §5)?
+- Compression codec (default snappy vs. zstd)?
+
+---
+
+## PRD 9 — SQLite output format
+
+### Background
+
+A single-file, queryable database turns the enumeration into an ad-hoc query
+surface: index the consonants, join against attested roots, and run SQL for
+counts/patterns — with no new runtime dependency (stdlib `sqlite3`).
+Complements the text formats for analysis and downstream tooling.
+
+### Goals
+
+- Add a `.sqlite` output selected by suffix.
+- Create a `roots` table `(c1 TEXT, c2 TEXT, c3 TEXT)` with a primary key over
+  the triple; NFC glyphs; deterministic insertion in ORDER order.
+- Stdlib `sqlite3` only.
+
+### Non-goals (v1)
+
+- Storing phonotactics/attestation tables, views, or migrations.
+- Incremental/upsert semantics; each run writes a fresh database.
+
+### Proposed design
+
+- `_write_sqlite`: `sqlite3.connect(path)`, `CREATE TABLE roots(c1, c2, c3,
+  PRIMARY KEY (c1, c2, c3))`, `executemany` insert, commit, close. The suffix
+  map gains `.sqlite`.
+- Overwrite semantics: if the file exists, replace it (delete/recreate) so runs
+  are reproducible.
+
+### Tests
+
+- Open with `sqlite3`, assert row count matches the input, the primary key
+  rejects a duplicate insert, and a sample of rows (incl. first/last) matches
+  ORDER.
+- NFC glyph storage round-trip.
+
+### Acceptance criteria
+
+- `ruff`, `mypy --strict`, `ty check`, `pytest` green; stdlib only.
+
+### Open questions
+
+- Suffix: `.sqlite`, `.db`, or both?
+- Add an `attested` column/table once subtraction lands?

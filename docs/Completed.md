@@ -187,3 +187,46 @@ there and a full entry here.
   - Attested-root subtraction (from the enumeration-rewrite entry) is
     unaffected: `load_attested()` resolves its new path internally, so the
     planned filter layer needs no change.
+
+---
+
+## Output formats — CSV via suffix inference (+ header on TSV)
+
+- **Completed:** 2026-10-11
+- **Commit:** TBD (agent does not commit; fill in after merge)
+- **Summary:** Added a streaming, suffix-driven output layer so `--output`
+  writes either TSV or CSV, inferred from the file extension. Both delimited
+  formats now carry the header `c1,c2,c3` (previously TSV was headerless). An
+  unknown or missing suffix is a loud error (exit code `2`). The writers use
+  only the standard library (`csv`) and stream one root per row, preserving
+  ORDER-lexicographic order.
+- **Deliverables:**
+  - `src/arabic_roots/writers.py` — `format_for_suffix()` +
+    `write_roots()`, a `_write_delimited` core with `_write_tsv`/`_write_csv`.
+  - `src/arabic_roots/cli.py` — delegates `--output` to `write_roots`;
+    `parser.error()` on an unsupported suffix; updated help/docstring.
+  - `tests/test_writers.py` — suffix resolution, headers, parent-dir creation,
+    unknown-suffix errors.
+  - `tests/test_cli.py` — TSV header assertion, new CSV test, unknown-suffix
+    `SystemExit` test.
+  - Docs: `AGENTS.md` (tree + §7), `docs/running.md` (options + output
+    section), `README.md` (options + output note).
+- **Acceptance evidence:**
+  - `uv run pytest` green; `writers.py` fully covered.
+  - `uv run enumerate-roots --limit 0 --output /tmp/roots.csv` writes header
+    `c1,c2,c3` then `ء,ب,ء`; `.tsv` writes the tab-separated equivalent.
+  - `ruff`, `ruff format --check`, `mypy --strict`, `ty check` clean; counts
+    unchanged (21168).
+- **Deviations:**
+  - TSV gained a header (a byte change) to match CSV and avoid the pandas
+    first-row-as-header footgun; `test_main_writes_tsv` was updated.
+- **Resolved open questions (decisions):**
+  - Format is selected by `--output` suffix (no `--format` flag); unknown
+    suffix errors rather than defaulting.
+  - Headers are on for both TSV and CSV; three glyph columns only for now.
+  - Writers live in a reusable module (`writers.py`), not inline in `cli.py`.
+  - `--format`/`--scheme` rendering stays out of scope (PRD 3).
+- **Follow-ups:**
+  - `docs/Future.md` PRDs 7–9: JSONL, Parquet (`pyarrow` extra), SQLite.
+  - An `attested`/`variety` column or the possible-roots output is deferred to
+    the attested-subtraction work.

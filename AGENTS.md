@@ -24,6 +24,7 @@ src/arabic_roots/
   transliteration.py# scheme encode/decode (Buckwalter now; DIN/IJMES/IPA later)
   attestation.py    # load_attested() + is_attested() over data/roots/attested.csv
   statemachine.py   # TriliteralMachine: single-root guard prototype (tests only)
+  writers.py        # suffix-driven output writers (tsv/csv now; jsonl/parquet/sqlite later)
   cli.py            # `enumerate-roots` console script
   __main__.py       # `python -m arabic_roots` delegate to cli.main
 data/rules/m_1-2.csv            # C1–C2 gate, 28×28 bool, diag=0 (C1≠C2, Greenberg 1950 p.162)
@@ -163,6 +164,8 @@ uv run enumerate-roots --limit 5
   source SHA changes.
 - CLI: `uv run enumerate-roots --data-dir data --limit 10 [--output roots.tsv]`
   (alt: `uv run python -m arabic_roots …`); never `python enumerate-roots`
-  (not a file — it is a console script). See `docs/running.md`.
+  (not a file — it is a console script). `--output` format is inferred from
+  the suffix (`.tsv`, `.csv`, both headed `c1,c2,c3`); an unknown suffix exits
+  `2`. See `docs/running.md`.
 - Git: Agent should not commit to Git and must leave that to the human engineer.
 - Keep `.idea/` and `.venv/` out of review diffs.
