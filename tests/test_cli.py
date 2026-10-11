@@ -25,7 +25,7 @@ def test_main_limit_two(capsys: pytest.CaptureFixture[str]) -> None:
     """--limit 2 prints the first two deterministic roots, hyphen-joined."""
     assert main(["--limit", "2"]) == 0
     lines = capsys.readouterr().out.splitlines()
-    assert lines == ["ء-ء-ء", "ء-ء-ب"]
+    assert lines == ["ء-ب-ء", "ء-ب-ب"]
 
 
 def test_main_writes_tsv(tmp_path: Path) -> None:
@@ -34,4 +34,4 @@ def test_main_writes_tsv(tmp_path: Path) -> None:
     assert main(["--limit", "0", "--output", str(target)]) == 0
     assert target.exists()
     first = target.read_text(encoding="utf-8").splitlines()[0]
-    assert first == "ء\tء\tء"
+    assert first == "ء\tب\tء"

@@ -18,16 +18,16 @@ Standard `src/` layout, package `arabic_roots`:
 ```text
 src/arabic_roots/
   alphabet.py       # 28-glyph source of truth: ORDER, LETTERS, LOOKUP, Place/Manner
-  phonotactics.py   # load_matrices() + is_allowed(c1,c2,c3,m_1_2,m_2_3)
-  enumerator.py     # iter_roots() / count_roots() via itertools.product
+  phonotactics.py   # load_matrices() + successors(matrix, order)
+  enumerator.py     # iter_roots() / count_roots() via matrix-successor walk (memoized)
   arabic_chain_bank_provider.py # ArabicChainBank build-time extraction/dedupe (pure, no I/O)
   transliteration.py# scheme encode/decode (Buckwalter now; DIN/IJMES/IPA later)
   attestation.py    # load_attested() + is_attested() over data/attested.csv
   statemachine.py   # TriliteralMachine: single-root guard prototype (tests only)
   cli.py            # `enumerate-roots` console script
   __main__.py       # `python -m arabic_roots` delegate to cli.main
-data/m_1-2.csv      # C1–C2 gate, 28×28 bool, all-1 init, diag=1
-data/m_2-3.csv      # C2–C3 gate, same shape/init
+data/m_1-2.csv      # C1–C2 gate, 28×28 bool, diag=0 (C1≠C2, Greenberg 1950 p.162)
+data/m_2-3.csv      # C2–C3 gate, 28×28 bool, diag=1 (C2=C3 permitted)
 data/attested.csv   # MSA attested roots: c1,c2,c3,variety,source (NFC)
 data/buckwalter.csv # ingest-only encoding table: glyph,buckwalter (28 rows)
 scripts/            # build-time orchestrators (fetch_attested.py)
@@ -41,8 +41,10 @@ tests/              # alphabet, matrices, golden-count, chain-bank, attestation,
 
 Rules live **only** in `data/*.csv`. `statemachine.py` carries literals and
 queries matrices in `pair12_allowed` / `pair23_allowed`; never add rule logic
-there. `enumerator.py` (`itertools.product` + `is_allowed`) is the batch path
-and the only production enumeration route. `TriliteralMachine` is a
+there. `phonotactics.successors()` turns each matrix into per-glyph successor
+lists, and `enumerator.py` walks those lists (never generating a forbidden
+pair), memoizing the materialized triples on matrix content — it is the batch
+path and the only production enumeration route. `TriliteralMachine` is a
 single-root guard prototype — it validates one triple at a time and is
 exercised by tests only; it is **not** on the enumeration path.
 
@@ -51,7 +53,7 @@ Attestation is a separate axis from phonotactics. `attestation.py` reads
 answers `is_attested(...)`; `arabic_chain_bank_provider.py` holds the pure
 root extraction/dedupe used only at build time by `scripts/fetch_attested.py`,
 with scheme encode/decode in `transliteration.py`. Attested data is a lexicon,
-not a rule: it never feeds `is_allowed`, and `enumerator.py` stays rule-only.
+not a rule: it never feeds `successors`, and `enumerator.py` stays rule-only.
 
 Legacy top-level `Alphabet.py` / `main.py` are superseded and deleted;
 do not reintroduce them. `main.py` had a missing `pandas` import and ASCII
@@ -82,6 +84,10 @@ stub alphabet — ported and fixed under `src/`.
 - Empty stubs: `Architecture.md`, `Phonotactic Rules for Arabic.md`, `Why.md`.
   Never invent a prohibition: each `0` in a matrix needs `TODO(Ryder:p.X)` or a
   page citation plus a regression test pinning the pair.
+- The `m_1-2` diagonal is `0` (`C1 ≠ C2`; Greenberg 1950, *The Patterning of
+  Root Morphemes in Semitic*, WORD 6:2, p.162) while the `m_2-3` diagonal stays
+  `1` (`C2 = C3` permitted). This asymmetry is an evidence-based rule, pinned in
+  `tests/test_enumeration.py`.
 - Ignore `Master FF Internals.md` (unrelated Firefox note).
 - `Misc.md` complete-graph idea is rejected: `28²` transitions per position is
   unmaintainable; matrices + guards replace it.
@@ -126,8 +132,9 @@ uv run enumerate-roots --limit 5
 - No `print()` in `src/` (logging only; `cli.py` stdout for roots is the one
   exception). Immutability: `frozendict`, `tuple`, `NamedTuple`. No new deps
   without justification.
-- Reproducibility: commit `uv.lock`; fixed `ORDER`; `itertools.product`
-  order is the output order; `LC_ALL=C.UTF-8`.
+- Reproducibility: commit `uv.lock`; fixed `ORDER`; the successor walk emits
+  ORDER-lexicographic order (identical to the old `itertools.product` order);
+  `LC_ALL=C.UTF-8`.
 
 ## 6. opencode config (`opencode.jsonc`, project root)
 

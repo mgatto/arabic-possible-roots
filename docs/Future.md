@@ -115,6 +115,8 @@ behavior unless asked otherwise.
 
 ### Goals
 
+ME: note that IPA probably would not be appropriate here!
+
 - Add `--scheme {arabic,din31635,ijmes,ipa}` (default `arabic`): render
   each root consonant in the named scheme, e.g. ص-ب-ر → DIN `ṣ-b-r`,
   IPA `sˤ-b-r`.

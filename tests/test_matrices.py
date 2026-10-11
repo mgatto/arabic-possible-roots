@@ -7,32 +7,36 @@ import pandas as pd
 import pytest
 
 from arabic_roots.alphabet import ORDER
-from arabic_roots.phonotactics import is_allowed, load_matrices
+from arabic_roots.phonotactics import load_matrices, successors
 
 
-def test_matrices_shape_all_ones_diag_one() -> None:
-    """Both repo matrices are 28x28, all-1 init, diagonals 1."""
+def test_matrices_shape_axes_and_diagonals() -> None:
+    """28x28 ORDER axes; M_1-2 diagonal 0 (C1!=C2), M_2-3 diagonal 1."""
     m_1_2, m_2_3 = load_matrices()
     for matrix in (m_1_2, m_2_3):
         assert matrix.shape == (28, 28)
         assert list(matrix.index) == list(ORDER)
         assert list(matrix.columns) == list(ORDER)
-        assert bool((matrix.to_numpy() == 1).all())
-        for glyph in ORDER:
-            assert bool(matrix.at[glyph, glyph]) is True
+    for glyph in ORDER:
+        assert bool(m_1_2.at[glyph, glyph]) is False
+        assert bool(m_2_3.at[glyph, glyph]) is True
+    for row in ORDER:
+        for column in ORDER:
+            if row != column:
+                assert bool(m_1_2.at[row, column]) is True
+                assert bool(m_2_3.at[row, column]) is True
 
 
-def test_is_allowed_conjunction(tmp_path: Path) -> None:
-    """A root needs both M_1-2[c1,c2] and M_2-3[c2,c3] to pass."""
+def test_successors_lists_true_columns_in_order(tmp_path: Path) -> None:
+    """successors() maps each row to its True columns, ORDER-ordered."""
     order = list(ORDER)
-    m_1_2 = pd.DataFrame(1, index=order, columns=order).astype(bool)
-    m_2_3 = pd.DataFrame(1, index=order, columns=order).astype(bool)
-    assert is_allowed("ب", "ت", "ث", m_1_2, m_2_3) is True
-    m_1_2.at["ب", "ت"] = False
-    assert is_allowed("ب", "ت", "ث", m_1_2, m_2_3) is False
-    m_1_2.at["ب", "ت"] = True
-    m_2_3.at["ت", "ث"] = False
-    assert is_allowed("ب", "ت", "ث", m_1_2, m_2_3) is False
+    frame = pd.DataFrame(1, index=order, columns=order).astype(bool)
+    frame.at["ب", "ت"] = False
+    frame.at["ب", "ب"] = False
+    succ = successors(frame)
+    assert set(succ) == set(ORDER)
+    assert succ["ء"] == ORDER
+    assert succ["ب"] == tuple(glyph for glyph in ORDER if glyph not in {"ت", "ب"})
     _ = tmp_path  # keeps tmp_path fixture pattern explicit for future pinning tests.
 
 
