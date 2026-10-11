@@ -359,6 +359,8 @@ vs. lexicon vs. transliteration — and the empty `roots/`, `rules/`,
 
 ## PRD 7 — JSONL output format
 
+> **Implemented (2026-10-11) — see `docs/Completed.md`.** Kept below as history.
+
 ### Background
 
 `--output` today writes flat, positional text (TSV, plus CSV). Flat formats
@@ -405,6 +407,8 @@ be materialized or wrapped in an array.
 ---
 
 ## PRD 8 — Parquet output format
+
+> **Implemented (2026-10-11) — see `docs/Completed.md`.** Kept below as history.
 
 ### Background
 
@@ -456,6 +460,8 @@ schema and types explicit.
 ---
 
 ## PRD 9 — SQLite output format
+
+> **Implemented (2026-10-11) — see `docs/Completed.md`.** Kept below as history.
 
 ### Background
 

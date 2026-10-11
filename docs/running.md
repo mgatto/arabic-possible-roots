@@ -68,13 +68,21 @@ The format is inferred from the suffix:
 
 - `.tsv` — tab-separated, header `c1\tc2\tc3`.
 - `.csv` — comma-separated, header `c1,c2,c3`.
+- `.jsonl` — one JSON object per line (`{"c1": …, "c2": …, "c3": …}`).
+- `.parquet` — columnar; requires the optional extra (`uv sync --extra output`).
+- `.sqlite` — a `roots(c1, c2, c3)` table with a primary key over the triple.
 
-Both are UTF-8/NFC with LF line endings; parent directories are created. An
-unknown or missing suffix is an error (exit code `2`).
+Text formats are UTF-8/NFC with LF line endings; parent directories are
+created; ORDER is preserved. An unknown or missing suffix is an error (exit
+code `2`), as is `.parquet` without `pyarrow`.
 
 ```bash
 uv run enumerate-roots --limit 0 --output roots.tsv
 uv run enumerate-roots --limit 0 --output roots.csv
+uv run enumerate-roots --limit 0 --output roots.jsonl
+uv run enumerate-roots --limit 0 --output roots.sqlite
+uv sync --extra output   # one-time, for Parquet
+uv run enumerate-roots --limit 0 --output roots.parquet
 ```
 
 ## Attested roots (`data/roots/attested.csv`)

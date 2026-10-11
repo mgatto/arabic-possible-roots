@@ -43,10 +43,15 @@ uv run python -m arabic_roots --limit 10
 | `--output`   | none          | Output path; format inferred from suffix (`.tsv`, `.csv`) |
 
 `--output PATH` writes the full possible-roots set (ignoring `--limit`). The
-format comes from the suffix: `.tsv` (tab-separated) or `.csv`
-(comma-separated), both with the header `c1,c2,c3`, UTF-8/NFC and LF endings.
-An unknown suffix is an error. See `docs/Future.md` for JSONL, Parquet, and
-SQLite plans.
+format comes from the suffix:
+
+- `.tsv` / `.csv` — delimited text, header `c1,c2,c3`.
+- `.jsonl` — one JSON object per line (literal glyphs).
+- `.parquet` — columnar; requires the optional extra (`uv sync --extra output`).
+- `.sqlite` — a `roots` table with a primary key over the triple.
+
+Text formats are UTF-8/NFC with LF endings; all preserve ORDER. An unknown
+suffix is an error.
 
 Sample stdout (hyphen-joined Arabic script; possible roots only):
 
@@ -90,7 +95,7 @@ Standard `src/` layout, package `arabic_roots`:
 | `transliteration.py` | scheme encode/decode (Buckwalter now; DIN/IJMES/IPA later) |
 | `arabic_chain_bank_provider.py` | build-time extraction/dedupe (pure, no I/O) |
 | `statemachine.py` | `TriliteralMachine`: single-root guard prototype (tests only) |
-| `writers.py` | suffix-driven output writers (`.tsv`, `.csv`) |
+| `writers.py` | suffix-driven output writers (`.tsv`, `.csv`, `.jsonl`, `.parquet`, `.sqlite`) |
 | `cli.py` | the `enumerate-roots` console script |
 
 Enumeration walks the matrices' per-glyph successor lists, following only

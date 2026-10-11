@@ -279,3 +279,50 @@ there and a full entry here.
   - PRD 11 (run logging) and PRDs 7–9 (JSONL/Parquet/SQLite) remain open.
   - A `--variety` flag and additional varieties arrive with PRD 1's
     Classical/dialect work.
+
+---
+
+## PRDs 7–9 — Additional output formats (JSONL, Parquet, SQLite)
+
+- **Completed:** 2026-10-11
+- **Commit:** TBD (agent does not commit; fill in after merge)
+- **Summary:** Extended the suffix-driven writer layer with three formats
+  alongside `.tsv`/`.csv`: `.jsonl` (one JSON object per line, literal glyphs),
+  `.parquet` (columnar via the opt-in `pyarrow` extra), and `.sqlite` (a
+  `roots` table with a primary key over the triple). The writer contract moved
+  from a text handle to the destination `Path`, since Parquet and SQLite need
+  the path (not a `TextIO`). All writers consume the streaming possible-roots
+  iterable and preserve ORDER; no CLI flags changed.
+- **Deliverables:**
+  - `src/arabic_roots/writers.py` — `_Writer = Callable[[Path, Iterable[Triple]], int]`;
+    `_write_jsonl`, `_write_parquet`, `_write_sqlite`; suffix map extended.
+  - `pyproject.toml` — `[project.optional-dependencies] output = ["pyarrow>=18"]`
+    plus `pyarrow` in the dev group; `uv.lock` updated (pyarrow 26.0.0).
+  - `src/arabic_roots/cli.py` — `--output` help lists all five suffixes.
+  - `tests/test_writers.py` — JSONL bytes/key-order/no-escapes, Parquet
+    round-trip + missing-engine `ValueError`, SQLite round-trip / duplicate-PK /
+    replace-existing, per-suffix dispatch.
+  - Docs: `README.md`, `docs/running.md` (formats + `uv sync --extra output`),
+    `AGENTS.md` (tree/§5/§7).
+- **Acceptance evidence:**
+  - `uv run pytest` — 68 passed; `writers.py` at 100%.
+  - `uv sync --locked` clean with the updated lock; `pyarrow 26.0.0` resolves
+    on Python 3.14 (cp314 wheel available).
+  - `enumerate-roots --limit 0 --output /tmp/roots.{jsonl,parquet,sqlite}`
+    each writes 17211 rows; `.tsv`/`.csv` unchanged.
+  - `ruff`, `ruff format --check`, `mypy --strict`, `ty check` clean.
+- **Deviations:**
+  - None. The writer contract changed from `TextIO` to `Path` (internal only;
+    the public `write_roots(path, triples)` signature is unchanged).
+- **Resolved open questions (decisions):**
+  - Parquet engine is an opt-in `output` extra **and** a dev dependency, so
+    tests exercise it while core runtime deps stay lean.
+  - SQLite suffix is `.sqlite` only.
+  - JSONL uses default `json.dumps` spacing with `ensure_ascii=False`.
+  - Parquet uses snappy compression (explicit).
+  - Single `--output` per run; multiple formats are written by separate runs
+    (no multi-output, no parallel writers).
+- **Follow-ups:**
+  - PRD 11 (run logging) remains open.
+  - Attested-aware columns (e.g. a `roots.attested` flag) are deferred; the
+    output is the possible-roots set, so such a column would be constant today.

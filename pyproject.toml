@@ -10,6 +10,9 @@ dependencies = [
     "python-statemachine>=3.2.1",
 ]
 
+[project.optional-dependencies]
+output = ["pyarrow>=18"]
+
 [project.scripts]
 enumerate-roots = "arabic_roots.cli:main"
 
@@ -17,6 +20,7 @@ enumerate-roots = "arabic_roots.cli:main"
 dev = [
     "mypy>=1.18",
     "pandas-stubs>=2.2",
+    "pyarrow>=18",
     "pytest>=8.3",
     "pytest-cov>=6.0",
     "ruff>=0.12",

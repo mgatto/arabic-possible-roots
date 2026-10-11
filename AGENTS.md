@@ -25,7 +25,7 @@ src/arabic_roots/
   attestation.py    # load_attested() + is_attested() over data/roots/attested.csv
   possible.py       # iter_possible()/count_possible(): legal minus attested
   statemachine.py   # TriliteralMachine: single-root guard prototype (tests only)
-  writers.py        # suffix-driven output writers (tsv/csv now; jsonl/parquet/sqlite later)
+  writers.py        # suffix-driven output writers (tsv/csv/jsonl/parquet/sqlite)
   cli.py            # `enumerate-roots` console script
   __main__.py       # `python -m arabic_roots` delegate to cli.main
 data/rules/m_1-2.csv            # C1–C2 gate, 28×28 bool, diag=0 (C1≠C2, Greenberg 1950 p.162)
@@ -137,7 +137,8 @@ uv run enumerate-roots --limit 5
 - `pytest --cov=arabic_roots`; target 100% on `alphabet`/`phonotactics`.
 - No `print()` in `src/` (logging only; `cli.py` stdout for roots is the one
   exception). Immutability: `frozendict`, `tuple`, `NamedTuple`. No new deps
-  without justification.
+  without justification; the Parquet writer's `pyarrow` is an opt-in extra
+  (`uv sync --extra output`), never a core dependency.
 - Reproducibility: commit `uv.lock`; fixed `ORDER`; the successor walk emits
   ORDER-lexicographic order (identical to the old `itertools.product` order);
   `LC_ALL=C.UTF-8`.
@@ -169,7 +170,9 @@ uv run enumerate-roots --limit 5
   (alt: `uv run python -m arabic_roots …`); never `python enumerate-roots`
   (not a file — it is a console script). The CLI emits possible roots (legal
   minus attested), logs both counts, and warns on attested-but-illegal roots.
-  `--output` format is inferred from the suffix (`.tsv`, `.csv`, both headed
-  `c1,c2,c3`); an unknown suffix exits `2`. See `docs/running.md`.
+  `--output` format is inferred from the suffix (`.tsv`/`.csv` headed
+  `c1,c2,c3`, plus `.jsonl`, `.sqlite`, and `.parquet`); an unknown suffix exits
+  `2`. `.parquet` needs the optional `output` extra (`pyarrow`). See
+  `docs/running.md`.
 - Git: Agent should not commit to Git and must leave that to the human engineer.
 - Keep `.idea/` and `.venv/` out of review diffs.

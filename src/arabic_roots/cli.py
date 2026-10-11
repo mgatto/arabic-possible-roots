@@ -48,8 +48,8 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         default=None,
         help=(
-            "Optional path for the full enumeration; the format is inferred "
-            "from the suffix (.tsv, .csv)."
+            "Optional path for the full possible-roots set; the format is "
+            "inferred from the suffix (.tsv, .csv, .jsonl, .parquet, .sqlite)."
         ),
     )
 
