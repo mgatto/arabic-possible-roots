@@ -2,7 +2,7 @@
 name = "arabic-roots"
 version = "0.5.0"
 description = "Enumerate triliteral Arabic roots constrained by phonotactic co-occurrence matrices"
-readme = "AGENTS.md"
+readme = "README.md"
 requires-python = "==3.14.*"
 dependencies = [
     "frozendict>=2.4.7",
