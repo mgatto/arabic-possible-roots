@@ -594,6 +594,8 @@ possible roots directly, by filtering the enumeration as it is generated.
 
 ## PRD 11 — Run logging (effective options, embedded choices, output summary)
 
+> **Implemented (2026-10-11) — see `docs/Completed.md`.** Kept below as history.
+
 ### Background
 
 The CLI logs only counts and the output path ("Allowed triliteral roots: …",
@@ -608,49 +610,59 @@ wrote.
 ### Goals
 
 - Log the **effective CLI options** at run start (`--data-dir`, `--limit`,
-  `--output`, plus future `--scheme`/`--delimiter`/`--variety`), including
-  resolved defaults rather than only user-supplied values.
+  `--output`, `--scheme`, `--delimiter`, `--log-file`), including resolved
+  defaults rather than only user-supplied values.
 - Log the **embedded choices** applied at runtime: `variety` (default `msa`),
   the output `format` inferred from the suffix, the fixed axis `ORDER`, and the
-  resolved input file paths (`rules/…`, `roots/attested.csv`).
-- Log **output summaries and file names**: allowed count, possible count,
-  excluded-attested count, the illegal-attested warning, and, per written file,
-  its path, format, and row count.
-- Keep the format deterministic and grep-able (stable field order).
+  resolved input directories (`rules/`, `roots/`, `transliterations/`).
+- Log **output summaries and file names**: allowed count, possible count, the
+  illegal-attested warning, and, per written file, its path, format, and row
+  count.
+- Optionally **append the same records to a file** via `--log-file PATH`
+  (timestamped), mirrored to stderr.
+- Keep the field order stable and grep-able.
 
 ### Non-goals (v1)
 
-- File-based logging, rotation, or a `--log-file` option (stderr only, matching
-  today's `basicConfig`); a separate PRD if wanted.
+- Log rotation, or a log directory with generated file names.
 - Changing stdout (the `--limit` sample) or the `--output` file contents.
-- Any telemetry/audit framework or new dependency.
+- Any telemetry/audit framework or new dependency; a `--log-level`/`--quiet`
+  control (fixed `INFO`).
 
 ### Proposed design
 
-- Stdlib `logging` only, to **stderr** (no new deps). No `print()` (AGENTS §5).
-- One deterministic banner line at `INFO`, `key=value` pairs in fixed order:
-  `run: data_dir=… limit=10 output=… format=csv variety=msa`
-  (unset options render as `output=none`, `format=none`).
-- Inputs line(s): resolved rule and lexicon paths (and their pinned counts).
-- Output line(s): `wrote 17211 possible roots to /tmp/roots.csv (csv)`; the
-  existing `Allowed`/`Possible` summaries remain at `INFO`.
+- Stdlib `logging` only (no new deps). No `print()` (AGENTS §5).
+- `_configure_logging(log_file)` attaches a `StreamHandler` to stderr and, when
+  `--log-file` is set, an appending
+  `FileHandler(path, mode="a", encoding="utf-8")`, both with a timestamped
+  `%(asctime)s %(levelname)s %(message)s` formatter (`%Y-%m-%dT%H:%M:%S`). It
+  clears its own handlers first (idempotent; no leaked handles) and keeps
+  `propagate=True` so test capture still works.
+- Banner at `INFO`: `run: data_dir=… limit=10 output=none format=none
+  scheme=arabic delimiter='-' variety=msa`.
+- Inputs line: resolved `rules/`, `roots/`, `transliterations/` paths.
+- Output line: `wrote 17211 possible roots to … (csv)`; the existing
+  `Allowed`/`Possible` summaries remain at `INFO`.
 
 ### Tests
 
-- `caplog` assertions that the banner contains each option and each resolved
-  choice (including defaults, e.g. `variety=msa`, inferred `format`).
-- Output-summary lines carry the correct allowed/possible/excluded counts.
-- Unknown `--output` suffix still exits `2` and emits no output line.
-- stdout and `--output` files are unchanged (logs stay on stderr).
+- `--log-file` writes a timestamped file (banner, `inputs:`, summaries) mirrored
+  to stderr; two runs append (two banners).
+- `caplog` assertions that the banner carries options and embedded choices.
+- Unknown `--output` suffix / delimiter clash still exit `2` with no output
+  line.
+- stdout and `--output` files unchanged.
 
 ### Acceptance criteria
 
-- `ruff`, `mypy --strict`, `ty check`, `pytest` green; no new deps; stdout and
-  output files byte-identical to before.
+- `ruff`, `ruff format --check`, `mypy --strict`, `ty check`, `pytest` green; no
+  new deps; stdout and output files unchanged.
 
-### Open questions
+### Resolved open questions (decisions)
 
-- One `key=value` line, one line per field, or JSON?
-- Add `--log-level`/`--quiet` now, or defer until a second caller wants it?
-- Include input file hashes/pins (e.g. attested SHA) for full reproducibility?
-- Should the banner print only when `--output` is set, or on every run?
+- Format: a single `key=value` banner plus `inputs:`/summary lines.
+- File logging: opt-in `--log-file PATH`, **appended**, timestamped, teeing to
+  stderr (moved from Non-goals into scope).
+- No `--log-level`/`--quiet`; fixed `INFO`.
+- Input file hashes/pins are not logged (paths only).
+- The banner prints on every run, not only when `--output` is set.

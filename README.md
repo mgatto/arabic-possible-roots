@@ -43,6 +43,7 @@ uv run python -m arabic_roots --limit 10
 | `--output`   | none          | Output path; format inferred from suffix (`.tsv`, `.csv`) |
 | `--scheme`   | `arabic`      | Output scheme: `arabic`, `din31635`, `ijmes`, `ipa`  |
 | `--delimiter`| `-`           | Separator between rendered consonants on stdout      |
+| `--log-file` | none          | Append a timestamped UTF-8 run log to this path      |
 
 `--output PATH` writes the full possible-roots set (ignoring `--limit`). The
 format comes from the suffix:
@@ -58,7 +59,9 @@ suffix is an error.
 `--scheme` renders each consonant (`arabic` default, or `din31635`, `ijmes`,
 `ipa`); it applies to stdout and to `--output` cells alike. `--delimiter`
 joins the rendered consonants on stdout (default `-`; use `""` for
-concatenation).
+concatenation). Logs go to stderr; `--log-file PATH` appends the same
+timestamped records (effective options, resolved inputs, counts, output) to a
+file.
 
 Sample stdout (hyphen-joined Arabic script; possible roots only):
 

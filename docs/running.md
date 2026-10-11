@@ -79,9 +79,11 @@ Sample (`--scheme din31635 --limit 3`):
 lexicon attests a root the matrices forbid:
 
 ```text
-INFO Allowed triliteral roots: 21168
-INFO Possible triliteral roots: 17211
-WARNING 2 attested roots are phonotactically illegal: ب-ب-ر, و-و-ح
+2026-10-11T13:45:00 INFO run: data_dir=… limit=10 output=none format=none scheme=arabic delimiter='-' variety=msa
+2026-10-11T13:45:00 INFO inputs: rules=…/rules roots=…/roots transliterations=…/transliterations
+2026-10-11T13:45:00 INFO Allowed triliteral roots: 21168
+2026-10-11T13:45:00 INFO Possible triliteral roots: 17211
+2026-10-11T13:45:00 WARNING 2 attested roots are phonotactically illegal: ب-ب-ر, و-و-ح
 ```
 
 Logs go to **stderr**; stdout carries only the `--limit` sample.
@@ -108,6 +110,22 @@ uv run enumerate-roots --limit 0 --output roots.jsonl
 uv run enumerate-roots --limit 0 --output roots.sqlite
 uv sync --extra output   # one-time, for Parquet
 uv run enumerate-roots --limit 0 --output roots.parquet
+```
+
+## Logging
+
+Runs log to **stderr** at INFO with a `%(asctime)s %(levelname)s %(message)s`
+prefix: a `run:` banner (effective options + embedded choices such as
+`scheme=arabic`, `variety=msa`, the inferred `format`), an `inputs:` line with
+resolved data paths, the `Allowed`/`Possible` counts, the illegal-attested
+warning, and the written-file summary.
+
+`--log-file PATH` **appends** the same timestamped records (UTF-8, one record
+per line) so a run can be reviewed later; missing parent directories are
+created. The log file is not created unless the flag is given.
+
+```bash
+uv run enumerate-roots --limit 0 --output roots.csv --log-file logs/run.log
 ```
 
 ## Attested roots (`data/roots/attested.csv`)

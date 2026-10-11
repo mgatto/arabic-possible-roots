@@ -177,6 +177,8 @@ uv run enumerate-roots --limit 5
   `2`. `.parquet` needs the optional `output` extra (`pyarrow`). Rendering is
   controlled by `--scheme {arabic,din31635,ijmes,ipa}` (default `arabic`) and
   `--delimiter` (default `-`); rendering lives in `render.py` at the CLI
-  boundary. See `docs/running.md`.
+  boundary. `--log-file PATH` appends timestamped run records (options,
+  embedded choices, counts, output) to a file, mirrored to stderr. See
+  `docs/running.md`.
 - Git: Agent should not commit to Git and must leave that to the human engineer.
 - Keep `.idea/` and `.venv/` out of review diffs.

@@ -1,5 +1,7 @@
 """Tests for the enumerate-roots CLI."""
 
+import logging
+import re
 from pathlib import Path
 
 import pytest
@@ -8,12 +10,13 @@ from arabic_roots.cli import build_parser, main
 
 
 def test_parser_defaults() -> None:
-    """Parser exposes data-dir, limit, output, scheme, and delimiter options."""
+    """Parser exposes data-dir, limit, output, scheme, delimiter, log-file."""
     args = build_parser().parse_args([])
     assert args.limit == 10
     assert args.output is None
     assert args.scheme == "arabic"
     assert args.delimiter == "-"
+    assert args.log_file is None
 
 
 def test_main_limit_zero(capsys: pytest.CaptureFixture[str]) -> None:
@@ -92,3 +95,37 @@ def test_main_delimiter_collision_errors() -> None:
     """A delimiter that clashes with the active scheme exits loudly."""
     with pytest.raises(SystemExit):
         main(["--scheme", "din31635", "--delimiter", "b", "--limit", "0"])
+
+
+def test_main_writes_timestamped_log_file(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """--log-file appends timestamped run records, mirrored to stderr."""
+    log = tmp_path / "logs" / "run.log"
+    assert main(["--limit", "0", "--log-file", str(log)]) == 0
+    text = log.read_text(encoding="utf-8")
+    assert "run: " in text
+    assert "inputs: " in text
+    assert "Allowed triliteral roots: 21168" in text
+    assert "Possible triliteral roots: 17211" in text
+    assert "variety=msa" in text
+    assert re.search(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2} ", text, re.MULTILINE)
+    assert "run: " in capsys.readouterr().err
+
+
+def test_main_log_file_appends(tmp_path: Path) -> None:
+    """Each run appends its own banner rather than overwriting."""
+    log = tmp_path / "run.log"
+    main(["--limit", "0", "--log-file", str(log)])
+    main(["--limit", "0", "--log-file", str(log)])
+    assert log.read_text(encoding="utf-8").count("run: ") == 2
+
+
+def test_main_logs_banner_fields(caplog: pytest.LogCaptureFixture) -> None:
+    """The run banner records effective options and embedded choices."""
+    with caplog.at_level(logging.INFO, logger="arabic_roots.cli"):
+        assert main(["--limit", "0", "--scheme", "din31635"]) == 0
+    messages = [record.getMessage() for record in caplog.records]
+    assert any("run: " in message for message in messages)
+    assert any("scheme=din31635" in message for message in messages)
+    assert any("variety=msa" in message for message in messages)

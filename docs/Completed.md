@@ -377,3 +377,47 @@ there and a full entry here.
     `data/transliterations/*.csv`; tests may use IJMES literals.
 - **Follow-ups:**
   - PRD 11 (run logging) remains open.
+
+---
+
+## PRD 11 — Run logging (effective options, embedded choices, output summary)
+
+- **Completed:** 2026-10-11
+- **Commit:** TBD (agent does not commit; fill in after merge)
+- **Summary:** The CLI now logs a structured run record at `INFO`: a `run:`
+  banner with the effective options and embedded choices (`data_dir`, `limit`,
+  `output`, inferred `format`, `scheme`, `delimiter`, `variety=msa`), an
+  `inputs:` line with resolved `rules/`/`roots/`/`transliterations/` paths, the
+  `Allowed`/`Possible` counts, the illegal-attested warning, and a
+  `wrote N possible roots to … (format)` summary. An opt-in `--log-file PATH`
+  appends the same timestamped records (UTF-8) alongside stderr. Scope was
+  widened from the original PRD (file logging was a non-goal).
+- **Deliverables:**
+  - `src/arabic_roots/cli.py` — `--log-file`; `_configure_logging` (stderr +
+    appending `FileHandler`, timestamped `%Y-%m-%dT%H:%M:%S`); banner/inputs/
+    summary lines; up-front `--output` suffix validation.
+  - `tests/test_cli.py` — log-file (timestamped, mirrored to stderr), append
+    across runs, `caplog` banner fields, parser default.
+  - Docs: `AGENTS.md` §7, `README.md` (option + note), `docs/running.md`
+    (Logging section), `.gitignore` (`*.log`).
+- **Acceptance evidence:**
+  - `uv run pytest` — 95 passed.
+  - `enumerate-roots --limit 0 --log-file /tmp/er.log` writes a timestamped log
+    mirroring stderr; a second run appends a second banner.
+  - `ruff`, `ruff format --check`, `mypy --strict`, `ty check` clean; stdout and
+    `--output` files unchanged; no new deps.
+- **Deviations:**
+  - File logging was originally a PRD 11 non-goal; the user requested it, so the
+    PRD was amended (opt-in `--log-file`, appended, timestamped, teeing to
+    stderr).
+  - Switched from `logging.basicConfig` to a `_configure_logging` helper on the
+    module logger (idempotent handler setup; avoids stripping pytest's capture
+    handler).
+- **Resolved open questions (decisions):**
+  - Format: one `key=value` banner + `inputs:`/summary lines.
+  - Opt-in `--log-file PATH`; **append**; **timestamp each line**; tee to stderr.
+  - No `--log-level`/`--quiet` (fixed `INFO`).
+  - Paths only (no input hashes/pins); banner on every run.
+- **Follow-ups:**
+  - `--log-level`/`--quiet`, log rotation, and input hashes/pins remain future
+    options.
