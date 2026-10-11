@@ -7,6 +7,10 @@ inventory, filtered by phonotactic co-occurrence. A *possible root* is
 phonotactically legal but unattested. Permissive baseline is
 `28³ = 21952` candidates; matrices only remove pairs with a cited source.
 
+Code Python modules for maximum exportability for reuse in other parts of this library and for other projects, too.
+For example, a Transliteration choice for output should be structured to be reusable by other programs since it has a
+utility beyond this specific project we're working in now.
+
 ## 2. Architecture
 
 Standard `src/` layout, package `arabic_roots`:
