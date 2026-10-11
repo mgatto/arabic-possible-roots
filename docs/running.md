@@ -28,7 +28,7 @@ tab-separated):
 
 ```text
 ء-ب-ء
-ء-ب-ب
+ء-ب-ت
 ```
 
 ## Why it fails
@@ -47,10 +47,24 @@ tab-separated):
 | `--limit`    | `10`          | How many sample roots to print (`0` prints none)     |
 | `--output`   | none          | Output path; format inferred from suffix (`.tsv`, `.csv`) |
 
+## Output scope (possible roots)
+
+`enumerate-roots` emits **possible** roots: phonotactically legal
+(`M_1-2 ∧ M_2-3`) but *not* attested. It logs both counts and warns when the
+lexicon attests a root the matrices forbid:
+
+```text
+INFO Allowed triliteral roots: 21168
+INFO Possible triliteral roots: 17211
+WARNING 2 attested roots are phonotactically illegal: ب-ب-ر, و-و-ح
+```
+
+Logs go to **stderr**; stdout carries only the `--limit` sample.
+
 ## Output files
 
-`--output PATH` writes the **full** enumeration (ignoring `--limit`). The
-format is inferred from the suffix:
+`--output PATH` writes the **full** possible-roots set (ignoring `--limit`).
+The format is inferred from the suffix:
 
 - `.tsv` — tab-separated, header `c1\tc2\tc3`.
 - `.csv` — comma-separated, header `c1,c2,c3`.

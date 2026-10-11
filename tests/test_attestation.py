@@ -37,10 +37,10 @@ def test_all_glyphs_are_inventory() -> None:
 
 
 def test_known_attested_and_known_possible() -> None:
-    """ك-ت-ب is attested; a legal but unattested triple is not."""
+    """ك-ت-ب is attested; a legal-but-unattested triple is not."""
     attested = load_attested()
     assert is_attested("ك", "ت", "ب", attested) is True
-    assert is_attested("ض", "ض", "ض", attested) is False
+    assert is_attested("ء", "ب", "ء", attested) is False
 
 
 def test_unknown_variety_is_false() -> None:

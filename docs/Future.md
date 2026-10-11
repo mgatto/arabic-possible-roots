@@ -502,6 +502,88 @@ Complements the text formats for analysis and downstream tooling.
 
 ---
 
+## PRD 10 — Attested-root subtraction (possible roots)
+
+> **Implemented (2026-10-11) — see `docs/Completed.md`.** Kept below as history.
+
+### Background
+
+The enumerator produces every phonotactically legal triple (`21168` with the
+shipped matrices), but the project's target concept is the *possible root*:
+legal **and** unattested. The two axes already exist separately —
+`enumerator.iter_roots()` (rules only) and `attestation.load_attested()`
+(lexicon) — but nothing composes them, so the CLI still emits attested roots
+(e.g. `ك-ت-ب`) alongside the possible ones. This PRD makes the CLI output the
+possible roots directly, by filtering the enumeration as it is generated.
+
+### Goals
+
+- Add a pure composition layer yielding legal-but-unattested triples:
+  `possible.iter_possible(...)` = `iter_roots(...)` minus the attested set for a
+  variety.
+- Make the CLI always emit possible roots (no opt-out flag); log both the
+  rule-only and possible counts.
+- Surface rules-vs-lexicon disagreement: warn when an attested root is
+  phonotactically illegal.
+- Keep `enumerator.py` rule-only and `attestation.py` lexicon-only; no new
+  dependency; no extra cache.
+
+### Non-goals (v1)
+
+- A CLI flag to include attested roots (archived, not built — see
+  `_Archive/include-attested-option.md`).
+- Per-variety selection via a flag (only `msa` exists; the API takes
+  `variety="msa"` internally, a `--variety` flag is deferred to PRD 1's
+  Classical/dialect work).
+- Caching the possible set (filtering the memoized enumeration is already
+  O(#allowed) with O(1) membership).
+- Changing the writers, suffix inference, or `--limit` behavior.
+
+### Proposed design
+
+- New `src/arabic_roots/possible.py` (pure; `attested` passed in, no I/O):
+  - `iter_possible(m_1_2, m_2_3, attested, variety="msa", order=ORDER)` →
+    `itertools.filterfalse(known.__contains__, iter_roots(m_1_2, m_2_3, order))`
+    where `known = attested.get(variety, frozenset())`.
+  - `count_possible(...)` → `sum(1 for _ in iter_possible(...))` (the underlying
+    `iter_roots` is memoized, so this is cheap).
+  - `attested_illegal(...)` → `tuple(sorted(known - set(iter_roots(...))))`
+    for the diagnostic (deterministic codepoint order).
+- `cli.py` (no new flags): load matrices + attested from `--data-dir`; log
+  `Allowed triliteral roots: 21168`, then `Possible triliteral roots: 17211`;
+  if `attested_illegal` is non-empty, `logger.warning(...)` (stderr); the
+  `--limit` sample and `--output` both consume `iter_possible(...)`.
+
+### Tests
+
+- New `tests/test_possible.py`: a `tmp_path` attested fixture mixing legal and
+  illegal triples; `iter_possible` equals allowed − attested with order
+  preserved; unknown variety → no subtraction; golden `count_possible == 17211`;
+  `attested_illegal(...) == {ب-ب-ر, و-و-ح}`; `ك-ت-ب` excluded and `ء-ب-ء`
+  included.
+- `tests/test_cli.py`: `test_main_limit_two` → `["ء-ب-ء", "ء-ب-ت"]`; TSV/CSV
+  first-row assertions unchanged; an integration test asserting the written
+  file has 17211 rows and no `ك-ت-ب`.
+- `tests/test_attestation.py`: correct the stale `ض-ض-ض` "legal but unattested"
+  docstring (it is now illegal).
+
+### Acceptance criteria
+
+- `enumerate-roots --limit 5` prints `ء-ب-ء`, `ء-ب-ت`, `ء-ب-ث` and logs
+  `Allowed: 21168` / `Possible: 17211`.
+- `ruff`, `ruff format --check`, `mypy --strict`, `ty check`, `pytest` green;
+  no new deps; stdout and `--output` files contain possible roots only.
+
+### Resolved open questions (decisions)
+
+- Subtraction is **always on**; no opt-in flag (the include-all option is
+  archived only).
+- Variety is an internal `"msa"` default; no `--variety` flag yet.
+- No separate possible-set cache.
+- Attested-but-illegal roots are logged as a warning, not a hard error.
+
+---
+
 ## PRD 11 — Run logging (effective options, embedded choices, output summary)
 
 ### Background

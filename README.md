@@ -7,8 +7,10 @@ A **possible root** is a triliteral consonant sequence that is
 *phonotactically legal* but *unattested* in the lexicon. The permissive
 baseline is every `28³ = 21952` candidate over the 28-consonant inventory;
 the co-occurrence matrices remove only pairs backed by a cited source. With
-the shipped matrices the enumerator yields **21168** legal roots, of which
-**3959** are attested MSA roots (so **17209** are possible roots).
+the shipped matrices there are **21168** legal roots; subtracting the **3957**
+attested MSA roots that are also legal leaves **17211** possible roots. (Two
+further attested roots are phonotactically illegal and are reported as a
+warning.) The CLI emits possible roots.
 
 ## Requirements
 
@@ -40,17 +42,18 @@ uv run python -m arabic_roots --limit 10
 | `--limit`    | `10`          | How many sample roots to print (`0` prints none)     |
 | `--output`   | none          | Output path; format inferred from suffix (`.tsv`, `.csv`) |
 
-`--output PATH` writes the full enumeration (ignoring `--limit`). The format
-comes from the suffix: `.tsv` (tab-separated) or `.csv` (comma-separated),
-both with the header `c1,c2,c3`, UTF-8/NFC and LF endings. An unknown suffix
-is an error. See `docs/Future.md` for JSONL, Parquet, and SQLite plans.
+`--output PATH` writes the full possible-roots set (ignoring `--limit`). The
+format comes from the suffix: `.tsv` (tab-separated) or `.csv`
+(comma-separated), both with the header `c1,c2,c3`, UTF-8/NFC and LF endings.
+An unknown suffix is an error. See `docs/Future.md` for JSONL, Parquet, and
+SQLite plans.
 
-Sample stdout (hyphen-joined Arabic script):
+Sample stdout (hyphen-joined Arabic script; possible roots only):
 
 ```text
 ء-ب-ء
-ء-ب-ب
 ء-ب-ت
+ء-ب-ث
 ```
 
 Do not invoke `python enumerate-roots` — `enumerate-roots` is a generated
@@ -83,15 +86,19 @@ Standard `src/` layout, package `arabic_roots`:
 | `phonotactics.py` | `load_matrices()` + `successors(matrix, order)` |
 | `enumerator.py` | `iter_roots()` / `count_roots()` via matrix-successor walk (memoized) |
 | `attestation.py` | `load_attested()` + `is_attested()` over `data/roots/attested.csv` |
+| `possible.py` | `iter_possible()` / `count_possible()`: legal minus attested |
 | `transliteration.py` | scheme encode/decode (Buckwalter now; DIN/IJMES/IPA later) |
 | `arabic_chain_bank_provider.py` | build-time extraction/dedupe (pure, no I/O) |
 | `statemachine.py` | `TriliteralMachine`: single-root guard prototype (tests only) |
+| `writers.py` | suffix-driven output writers (`.tsv`, `.csv`) |
 | `cli.py` | the `enumerate-roots` console script |
 
 Enumeration walks the matrices' per-glyph successor lists, following only
-`1` cells, and memoizes the materialized triples on matrix content. Output is
-ORDER-lexicographic and deterministic. Attestation is a separate axis: it is
-a lexicon, never a rule, and does not feed enumeration.
+`1` cells, and memoizes the materialized triples on matrix content.
+`possible.py` subtracts the attested lexicon from that stream, so the CLI
+emits only legal-but-unattested roots. Output is ORDER-lexicographic and
+deterministic. Attestation is a separate axis: it is a lexicon, never a rule,
+and does not feed enumeration.
 
 ## Build-time data
 

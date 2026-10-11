@@ -230,3 +230,52 @@ there and a full entry here.
   - `docs/Future.md` PRDs 7–9: JSONL, Parquet (`pyarrow` extra), SQLite.
   - An `attested`/`variety` column or the possible-roots output is deferred to
     the attested-subtraction work.
+
+---
+
+## PRD 10 — Attested-root subtraction (possible roots)
+
+- **Completed:** 2026-10-11
+- **Commit:** TBD (agent does not commit; fill in after merge)
+- **Summary:** The CLI now emits **possible** roots only — phonotactically
+  legal but unattested — by composing the two existing axes. A new pure module
+  `possible.py` filters the memoized enumeration (`iter_roots`) against a
+  variety's attested `frozenset` (O(1) membership). Shipped data yields
+  **17211** possible roots (`21168` allowed − `3957` attested∩allowed); the CLI
+  logs both counts and warns that **2** attested roots are phonotactically
+  illegal (`ب-ب-ر`, `و-و-ح`) — a rules-vs-lexicon disagreement.
+- **Deliverables:**
+  - `src/arabic_roots/possible.py` — `iter_possible()` / `count_possible()` /
+    `attested_illegal()` (pure, no I/O, no cache).
+  - `src/arabic_roots/cli.py` — loads matrices + attested; logs `Allowed` and
+    `Possible`; warns on illegal attested; stdout sample and `--output` both
+    consume `iter_possible(...)`.
+  - `tests/test_possible.py` — subtraction, order, unknown variety, golden
+    `17211`, illegal detection.
+  - `tests/test_cli.py` — `test_main_limit_two` → `["ء-ب-ء", "ء-ب-ت"]`; new
+    integration test (written file has 17211 rows, no `ك-ت-ب`).
+  - `tests/test_attestation.py` — stale `ض-ض-ض` "legal but unattested"
+    docstring corrected.
+  - Docs: `README.md`, `docs/running.md` (output scope + warning), `AGENTS.md`
+    (tree/§2/§7).
+  - `_Archive/include-attested-option.md` — archived (unbuilt)
+    `--include-attested` opt-in with its hook point.
+- **Acceptance evidence:**
+  - `uv run pytest` — 62 passed; `possible.py` at 100%.
+  - `uv run enumerate-roots --limit 5` prints `ء-ب-ء`, `ء-ب-ت`, `ء-ب-ث` and
+    logs `Allowed: 21168` / `Possible: 17211` plus the 2-root warning.
+  - `ruff`, `ruff format --check`, `mypy --strict`, `ty check` all clean.
+- **Deviations:**
+  - None; `README.md`'s prior "17209" was corrected to **17211** (only the
+    `3957` legal attested roots can be subtracted).
+- **Resolved open questions (decisions):**
+  - Subtraction is always on; there is **no** opt-in flag (the include-all
+    option is archived only).
+  - Variety is an internal `"msa"` default; no `--variety` flag yet.
+  - No separate possible-set cache — filtering the memoized enumeration is
+    cheap enough.
+  - Attested-but-illegal roots are logged as a warning, not a hard error.
+- **Follow-ups:**
+  - PRD 11 (run logging) and PRDs 7–9 (JSONL/Parquet/SQLite) remain open.
+  - A `--variety` flag and additional varieties arrive with PRD 1's
+    Classical/dialect work.

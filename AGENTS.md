@@ -23,6 +23,7 @@ src/arabic_roots/
   arabic_chain_bank_provider.py # ArabicChainBank build-time extraction/dedupe (pure, no I/O)
   transliteration.py# scheme encode/decode (Buckwalter now; DIN/IJMES/IPA later)
   attestation.py    # load_attested() + is_attested() over data/roots/attested.csv
+  possible.py       # iter_possible()/count_possible(): legal minus attested
   statemachine.py   # TriliteralMachine: single-root guard prototype (tests only)
   writers.py        # suffix-driven output writers (tsv/csv now; jsonl/parquet/sqlite later)
   cli.py            # `enumerate-roots` console script
@@ -55,6 +56,8 @@ answers `is_attested(...)`; `arabic_chain_bank_provider.py` holds the pure
 root extraction/dedupe used only at build time by `scripts/fetch_attested.py`,
 with scheme encode/decode in `transliteration.py`. Attested data is a lexicon,
 not a rule: it never feeds `successors`, and `enumerator.py` stays rule-only.
+`possible.py` is the composition layer — it subtracts a variety's attested
+`frozenset` from `iter_roots(...)` to yield the possible roots the CLI emits.
 
 Legacy top-level `Alphabet.py` / `main.py` are superseded and deleted;
 do not reintroduce them. `main.py` had a missing `pandas` import and ASCII
@@ -164,8 +167,9 @@ uv run enumerate-roots --limit 5
   source SHA changes.
 - CLI: `uv run enumerate-roots --data-dir data --limit 10 [--output roots.tsv]`
   (alt: `uv run python -m arabic_roots …`); never `python enumerate-roots`
-  (not a file — it is a console script). `--output` format is inferred from
-  the suffix (`.tsv`, `.csv`, both headed `c1,c2,c3`); an unknown suffix exits
-  `2`. See `docs/running.md`.
+  (not a file — it is a console script). The CLI emits possible roots (legal
+  minus attested), logs both counts, and warns on attested-but-illegal roots.
+  `--output` format is inferred from the suffix (`.tsv`, `.csv`, both headed
+  `c1,c2,c3`); an unknown suffix exits `2`. See `docs/running.md`.
 - Git: Agent should not commit to Git and must leave that to the human engineer.
 - Keep `.idea/` and `.venv/` out of review diffs.

@@ -22,10 +22,10 @@ def test_main_limit_zero(capsys: pytest.CaptureFixture[str]) -> None:
 
 
 def test_main_limit_two(capsys: pytest.CaptureFixture[str]) -> None:
-    """--limit 2 prints the first two deterministic roots, hyphen-joined."""
+    """--limit 2 prints the first two possible roots, hyphen-joined."""
     assert main(["--limit", "2"]) == 0
     lines = capsys.readouterr().out.splitlines()
-    assert lines == ["ء-ب-ء", "ء-ب-ب"]
+    assert lines == ["ء-ب-ء", "ء-ب-ت"]
 
 
 def test_main_writes_tsv(tmp_path: Path) -> None:
@@ -52,3 +52,13 @@ def test_main_unknown_suffix_errors(tmp_path: Path) -> None:
     target = tmp_path / "roots.txt"
     with pytest.raises(SystemExit):
         main(["--limit", "0", "--output", str(target)])
+
+
+def test_main_outputs_possible_roots_only(tmp_path: Path) -> None:
+    """The written file holds possible roots: 17211 rows, no attested ك-ت-ب."""
+    target = tmp_path / "roots.tsv"
+    assert main(["--limit", "0", "--output", str(target)]) == 0
+    lines = target.read_text(encoding="utf-8").splitlines()
+    assert lines[0] == "c1\tc2\tc3"
+    assert len(lines) == 17211 + 1
+    assert "ك\tت\tب" not in lines

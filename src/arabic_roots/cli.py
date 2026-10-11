@@ -5,8 +5,10 @@ import logging
 import sys
 from pathlib import Path
 
-from arabic_roots.enumerator import count_roots, iter_roots
+from arabic_roots.attestation import load_attested
+from arabic_roots.enumerator import count_roots
 from arabic_roots.phonotactics import DATA_DIR, load_matrices
+from arabic_roots.possible import attested_illegal, count_possible, iter_possible
 from arabic_roots.writers import write_roots
 
 logger = logging.getLogger(__name__)
@@ -21,7 +23,10 @@ def build_parser() -> argparse.ArgumentParser:
     """
 
     parser = argparse.ArgumentParser(
-        description="Enumerate triliteral Arabic roots filtered by M_1-2/M_2-3.",
+        description=(
+            "Enumerate possible triliteral Arabic roots: phonotactically "
+            "legal (M_1-2/M_2-3) but unattested."
+        ),
     )
 
     parser.add_argument(
@@ -62,26 +67,41 @@ def main(argv: list[str] | None = None) -> int:
         unsupported suffix.
 
     Notes:
-        Writes up to ``--limit`` hyphen-joined roots to stdout and, when
-        ``--output`` is set, the full enumeration in the suffix-selected
-        format (``.tsv``/``.csv``, header ``c1,c2,c3``). The stdout write is
-        the one permitted output in ``src/`` (AGENTS §5).
+        Emits **possible** roots (legal but unattested): up to ``--limit``
+        hyphen-joined to stdout and, when ``--output`` is set, the full set in
+        the suffix-selected format (``.tsv``/``.csv``, header ``c1,c2,c3``).
+        Logs both the rule-only and possible counts, and warns when the lexicon
+        attests a root the matrices forbid. The stdout write is the one
+        permitted output in ``src/`` (AGENTS §5).
     """
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     parser = build_parser()
     args = parser.parse_args(argv)
     m_1_2, m_2_3 = load_matrices(args.data_dir)
-    total = count_roots(m_1_2, m_2_3)
-    logger.info("Allowed triliteral roots: %d", total)
+    attested = load_attested(args.data_dir)
 
-    for index, triple in enumerate(iter_roots(m_1_2, m_2_3)):
+    logger.info("Allowed triliteral roots: %d", count_roots(m_1_2, m_2_3))
+    logger.info(
+        "Possible triliteral roots: %d",
+        count_possible(m_1_2, m_2_3, attested),
+    )
+
+    illegal = attested_illegal(m_1_2, m_2_3, attested)
+    if illegal:
+        logger.warning(
+            "%d attested roots are phonotactically illegal: %s",
+            len(illegal),
+            ", ".join("-".join(triple) for triple in illegal),
+        )
+
+    for index, triple in enumerate(iter_possible(m_1_2, m_2_3, attested)):
         if index >= args.limit:
             break
         sys.stdout.write("-".join(triple) + "\n")
 
     if args.output is not None:
         try:
-            written = write_roots(args.output, iter_roots(m_1_2, m_2_3))
+            written = write_roots(args.output, iter_possible(m_1_2, m_2_3, attested))
         except ValueError as exc:
             parser.error(str(exc))
 
