@@ -41,6 +41,8 @@ uv run python -m arabic_roots --limit 10
 | `--data-dir` | `<repo>/data` | Data root holding `rules/` (`m_1-2.csv`, `m_2-3.csv`) |
 | `--limit`    | `10`          | How many sample roots to print (`0` prints none)     |
 | `--output`   | none          | Output path; format inferred from suffix (`.tsv`, `.csv`) |
+| `--scheme`   | `arabic`      | Output scheme: `arabic`, `din31635`, `ijmes`, `ipa`  |
+| `--delimiter`| `-`           | Separator between rendered consonants on stdout      |
 
 `--output PATH` writes the full possible-roots set (ignoring `--limit`). The
 format comes from the suffix:
@@ -52,6 +54,11 @@ format comes from the suffix:
 
 Text formats are UTF-8/NFC with LF endings; all preserve ORDER. An unknown
 suffix is an error.
+
+`--scheme` renders each consonant (`arabic` default, or `din31635`, `ijmes`,
+`ipa`); it applies to stdout and to `--output` cells alike. `--delimiter`
+joins the rendered consonants on stdout (default `-`; use `""` for
+concatenation).
 
 Sample stdout (hyphen-joined Arabic script; possible roots only):
 
@@ -96,6 +103,7 @@ Standard `src/` layout, package `arabic_roots`:
 | `arabic_chain_bank_provider.py` | build-time extraction/dedupe (pure, no I/O) |
 | `statemachine.py` | `TriliteralMachine`: single-root guard prototype (tests only) |
 | `writers.py` | suffix-driven output writers (`.tsv`, `.csv`, `.jsonl`, `.parquet`, `.sqlite`) |
+| `render.py` | output schemes (`arabic`, `din31635`, `ijmes`, `ipa`) |
 | `cli.py` | the `enumerate-roots` console script |
 
 Enumeration walks the matrices' per-glyph successor lists, following only

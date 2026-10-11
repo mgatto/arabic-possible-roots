@@ -8,10 +8,12 @@ from arabic_roots.cli import build_parser, main
 
 
 def test_parser_defaults() -> None:
-    """Parser exposes data-dir, limit, and output options."""
+    """Parser exposes data-dir, limit, output, scheme, and delimiter options."""
     args = build_parser().parse_args([])
     assert args.limit == 10
     assert args.output is None
+    assert args.scheme == "arabic"
+    assert args.delimiter == "-"
 
 
 def test_main_limit_zero(capsys: pytest.CaptureFixture[str]) -> None:
@@ -62,3 +64,31 @@ def test_main_outputs_possible_roots_only(tmp_path: Path) -> None:
     assert lines[0] == "c1\tc2\tc3"
     assert len(lines) == 17211 + 1
     assert "ك\tت\tب" not in lines
+
+
+def test_main_scheme_din(capsys: pytest.CaptureFixture[str]) -> None:
+    """--scheme din31635 renders each consonant in DIN 31635."""
+    assert main(["--scheme", "din31635", "--limit", "1"]) == 0
+    assert capsys.readouterr().out == "ʾ-b-ʾ\n"
+
+
+def test_main_delimiter_empty(capsys: pytest.CaptureFixture[str]) -> None:
+    """--delimiter '' concatenates the rendered consonants."""
+    assert main(["--limit", "2", "--delimiter", ""]) == 0
+    lines = capsys.readouterr().out.splitlines()
+    assert lines == ["ءبء", "ءبت"]
+
+
+def test_main_output_scheme_renders_cells(tmp_path: Path) -> None:
+    """--output renders cells in the chosen scheme, columns stay separate."""
+    target = tmp_path / "roots.tsv"
+    assert main(["--scheme", "din31635", "--limit", "0", "--output", str(target)]) == 0
+    lines = target.read_text(encoding="utf-8").splitlines()
+    assert lines[0] == "c1\tc2\tc3"
+    assert lines[1] == "ʾ\tb\tʾ"
+
+
+def test_main_delimiter_collision_errors() -> None:
+    """A delimiter that clashes with the active scheme exits loudly."""
+    with pytest.raises(SystemExit):
+        main(["--scheme", "din31635", "--delimiter", "b", "--limit", "0"])

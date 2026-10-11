@@ -26,12 +26,14 @@ src/arabic_roots/
   possible.py       # iter_possible()/count_possible(): legal minus attested
   statemachine.py   # TriliteralMachine: single-root guard prototype (tests only)
   writers.py        # suffix-driven output writers (tsv/csv/jsonl/parquet/sqlite)
+  render.py         # output transliteration schemes (arabic/din31635/ijmes/ipa)
   cli.py            # `enumerate-roots` console script
   __main__.py       # `python -m arabic_roots` delegate to cli.main
 data/rules/m_1-2.csv            # C1–C2 gate, 28×28 bool, diag=0 (C1≠C2, Greenberg 1950 p.162)
 data/rules/m_2-3.csv            # C2–C3 gate, 28×28 bool, diag=1 (C2=C3 permitted)
 data/roots/attested.csv         # MSA attested roots: c1,c2,c3,variety,source (NFC)
 data/transliterations/buckwalter.csv # ingest-only encoding table: glyph,buckwalter (28 rows)
+data/transliterations/ijmes.csv      # output scheme table: glyph,ijmes (28 rows)
 scripts/            # build-time orchestrators (fetch_attested.py)
 docs/running.md     # how to run (commands, failure table, options)
 docs/Future.md      # unimplemented micro-PRDs (oracle, rendering)
@@ -108,16 +110,16 @@ stub alphabet — ported and fixed under `src/`.
   `alphabet.normalize_glyph` / `is_valid_glyph`.
 - Romanization only at I/O: IPA (`[ħ ʕ q tˤ]`, Thelwall) for reasoning,
   DIN 31635 (`ḥ ṯ ǧ š ṣ ḍ ṭ ẓ ʿ ʾ ġ`) for reversible display, IJMES as output
-  variant. Forbid Buckwalter/Arabizi/`sh|kh|gh|th|dh` in code and tests — the
-  **one** exception is `data/transliterations/buckwalter.csv`, an external
-  ingest-encoding table (`glyph,buckwalter`) read only by
-  `scripts/fetch_attested.py`; no Buckwalter literal ever appears in `.py`
-  (see §7).
+  variant. Forbid Buckwalter/Arabizi/`sh|kh|gh|th|dh` literals in `src/`;
+  scheme tables are data, stored in `data/transliterations/*.csv`
+  (`buckwalter.csv` ingest-only; `ijmes.csv` output) and loaded at runtime by
+  `transliteration.py` / `render.py`, so no Buckwalter or IJMES symbol appears
+  in `.py`. Tests may use IJMES literals (see §7).
 - CSVs: UTF-8/NFC, LF. Matrices (`data/rules/`): first column + header = glyphs
   in `ORDER`, cells `0`/`1`. `data/roots/attested.csv`: header
   `c1,c2,c3,variety,source`, glyph cells in `ORDER`.
-  `data/transliterations/buckwalter.csv`: header `glyph,buckwalter`, glyph
-  column exactly `ORDER`.
+  `data/transliterations/*.csv`: header `glyph,<scheme>`, glyph column exactly
+  `ORDER` (`buckwalter.csv`, `ijmes.csv`).
 
 ## 5. Quality gates (must pass before commit)
 
@@ -172,7 +174,9 @@ uv run enumerate-roots --limit 5
   minus attested), logs both counts, and warns on attested-but-illegal roots.
   `--output` format is inferred from the suffix (`.tsv`/`.csv` headed
   `c1,c2,c3`, plus `.jsonl`, `.sqlite`, and `.parquet`); an unknown suffix exits
-  `2`. `.parquet` needs the optional `output` extra (`pyarrow`). See
-  `docs/running.md`.
+  `2`. `.parquet` needs the optional `output` extra (`pyarrow`). Rendering is
+  controlled by `--scheme {arabic,din31635,ijmes,ipa}` (default `arabic`) and
+  `--delimiter` (default `-`); rendering lives in `render.py` at the CLI
+  boundary. See `docs/running.md`.
 - Git: Agent should not commit to Git and must leave that to the human engineer.
 - Keep `.idea/` and `.venv/` out of review diffs.

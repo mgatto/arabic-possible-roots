@@ -104,6 +104,8 @@ den koranischen Hapaxlegomena unikaler Wurzeln* (Harrassowitz, 2011),
 
 ## PRD 3 — Output transliteration schemes + optional delimiter
 
+> **Implemented (2026-10-11) — see `docs/Completed.md`.** Kept below as history.
+
 ### Background
 
 Stdout currently renders roots as hyphen-joined Arabic script (`ك-ت-ب`;

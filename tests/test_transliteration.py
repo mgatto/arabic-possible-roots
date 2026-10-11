@@ -68,7 +68,7 @@ def test_build_decoder_rejects_duplicate_symbol() -> None:
     ]
     symbol, glyph = next(iter(decoder.items()))
     rows.append({"glyph": glyph, "buckwalter": symbol})
-    with pytest.raises(ValueError, match="duplicate Buckwalter symbol"):
+    with pytest.raises(ValueError, match="duplicate scheme symbol"):
         build_decoder(rows)
 
 

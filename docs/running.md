@@ -46,6 +46,31 @@ tab-separated):
 | `--data-dir` | `<repo>/data` | Data root holding `rules/` (`m_1-2.csv`, `m_2-3.csv`)  |
 | `--limit`    | `10`          | How many sample roots to print (`0` prints none)     |
 | `--output`   | none          | Output path; format inferred from suffix (`.tsv`, `.csv`) |
+| `--scheme`   | `arabic`      | Output scheme: `arabic`, `din31635`, `ijmes`, `ipa`  |
+| `--delimiter`| `-`           | Separator between rendered consonants on stdout      |
+
+## Schemes and delimiter
+
+`--scheme` renders each consonant (`arabic` default, or `din31635`, `ijmes`,
+`ipa`); it applies to stdout and to `--output` cells alike (the file columns
+stay separate). `--delimiter` joins the rendered consonants on stdout (default
+`-`; `""` concatenates). A delimiter that clashes with the active scheme's
+symbols is rejected (exit code `2`).
+
+```bash
+uv run enumerate-roots --scheme din31635 --delimiter "-" --limit 3
+uv run enumerate-roots --scheme ijmes --limit 3
+uv run enumerate-roots --scheme ipa --limit 3
+uv run enumerate-roots --delimiter "" --limit 3
+```
+
+Sample (`--scheme din31635 --limit 3`):
+
+```text
+ʾ-b-ʾ
+ʾ-b-t
+ʾ-b-ṯ
+```
 
 ## Output scope (possible roots)
 

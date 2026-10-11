@@ -326,3 +326,54 @@ there and a full entry here.
   - PRD 11 (run logging) remains open.
   - Attested-aware columns (e.g. a `roots.attested` flag) are deferred; the
     output is the possible-roots set, so such a column would be constant today.
+
+---
+
+## PRD 3 — Output transliteration schemes + optional delimiter
+
+- **Completed:** 2026-10-11
+- **Commit:** TBD (agent does not commit; fill in after merge)
+- **Summary:** Added `--scheme {arabic,din31635,ijmes,ipa}` (default `arabic`)
+  and `--delimiter` (default `-`) to the CLI. A new `render.py` builds
+  glyph -> symbol maps per scheme — `arabic` (identity), `din31635`/`ipa` from
+  the typed `Letter` fields, and `ijmes` loaded from a new
+  `data/transliterations/ijmes.csv` — and renders roots at the I/O boundary.
+  The scheme applies to both stdout and `--output` cells (columns stay
+  separate; the delimiter is stdout-only); a delimiter clashing with the active
+  scheme's symbols is rejected (exit `2`). Default invocation is unchanged
+  (`ء-ب-ء`…).
+- **Deliverables:**
+  - `data/transliterations/ijmes.csv` — `glyph,ijmes` (28 rows), sourced from
+    the owned IJMES chart (`Notes/TransChart 1.pdf`).
+  - `src/arabic_roots/render.py` — `SCHEMES`, `build_schemes`,
+    `render_cell`/`render_cells`/`iter_render_cells`/`render_triple`,
+    `validate_delimiter`.
+  - `src/arabic_roots/transliteration.py` — `TRANSLITERATIONS_SUBDIR`;
+    `build_decoder(..., symbol_column="buckwalter")` generalized for IJMES.
+  - `src/arabic_roots/cli.py` — `--scheme`/`--delimiter`; stdout and `--output`
+    rendering.
+  - `tests/test_render.py`, `tests/test_cli.py` (scheme/delimiter cases),
+    `tests/test_transliteration.py` (generic message match).
+  - Docs: `AGENTS.md` (§4 exception + tree + §7), `README.md`,
+    `docs/running.md` (schemes/delimiter section).
+- **Acceptance evidence:**
+  - `uv run pytest` — 92 passed; `render.py` and `transliteration.py` at 100%.
+  - `enumerate-roots --scheme din31635 --limit 3` -> `ʾ-b-ʾ`/`ʾ-b-t`/`ʾ-b-ṯ`;
+    `--scheme ijmes` -> `ʾ-b-th`; `--scheme ipa` -> `ʔ-b-θ`; `--delimiter ""`
+    -> `ءبء`; default unchanged.
+  - `ruff`, `ruff format --check`, `mypy --strict`, `ty check` clean.
+- **Deviations:**
+  - IJMES is stored as CSV data (not a `Letter` field), and its `sh|kh|gh|th|dh`
+    digraphs never appear in `src/`, per the §4 policy. The render-table test
+    uses IJMES literals directly (tests are exempt).
+- **Resolved open questions (decisions):**
+  - Schemes shipped: all four (`arabic`, `din31635`, `ijmes`, `ipa`); IPA is
+    included despite being phonetic.
+  - Default delimiter stays `-` (no behavior change); `""` concatenates.
+  - `--scheme` applies to both stdout and `--output`; `--delimiter` is
+    stdout-only.
+  - Rendering lives in `render.py`; scheme symbols are data, not code.
+  - AGENTS §4 amended: the digraph ban targets `src/`; scheme tables live in
+    `data/transliterations/*.csv`; tests may use IJMES literals.
+- **Follow-ups:**
+  - PRD 11 (run logging) remains open.

@@ -20,24 +20,33 @@ from arabic_roots.alphabet import GLYPH_SET, ORDER, nfc
 __all__ = [
     "BUCKWALTER_COLUMN",
     "GLYPH_COLUMN",
+    "TRANSLITERATIONS_SUBDIR",
     "build_decoder",
     "build_encoder",
     "decode_root",
     "encode_root",
 ]
 
+#: Sub-directory of the data root holding the scheme tables.
+TRANSLITERATIONS_SUBDIR: str = "transliterations"
+
 #: Scheme-table column holding the Arabic glyph.
 GLYPH_COLUMN: str = "glyph"
 
-#: Scheme-table column holding the external (here: Buckwalter) symbol.
+#: Scheme-table column holding the external (default: Buckwalter) symbol.
 BUCKWALTER_COLUMN: str = "buckwalter"
 
 
-def build_decoder(rows: Iterable[Mapping[str, object]]) -> frozendict[str, str]:
+def build_decoder(
+    rows: Iterable[Mapping[str, object]],
+    symbol_column: str = BUCKWALTER_COLUMN,
+) -> frozendict[str, str]:
     """Invert a scheme table into a symbol -> glyph decoder.
 
     Args:
-        rows: Mappings carrying the ``glyph`` and ``buckwalter`` columns.
+        rows: Mappings carrying the ``glyph`` and ``symbol_column`` columns.
+        symbol_column: Name of the column holding the scheme symbol; defaults
+            to ``"buckwalter"`` (use ``"ijmes"`` for the IJMES table).
 
     Returns:
         A ``frozendict`` mapping each scheme symbol to its NFC inventory glyph.
@@ -54,18 +63,18 @@ def build_decoder(rows: Iterable[Mapping[str, object]]) -> frozendict[str, str]:
     decoder: dict[str, str] = {}
     for row in rows:
         glyph = row.get(GLYPH_COLUMN)
-        symbol = row.get(BUCKWALTER_COLUMN)
+        symbol = row.get(symbol_column)
         if not isinstance(glyph, str) or not isinstance(symbol, str):
-            raise ValueError("map rows need 'glyph' and 'buckwalter' columns")
+            raise ValueError(f"map rows need 'glyph' and {symbol_column!r} columns")
         normalized = nfc(glyph.strip())
         key = symbol.strip()
         if normalized not in GLYPH_SET or not key:
             raise ValueError(f"invalid mapping row: {glyph!r} -> {symbol!r}")
         if key in decoder:
-            raise ValueError(f"duplicate Buckwalter symbol: {key!r}")
+            raise ValueError(f"duplicate scheme symbol: {key!r}")
         decoder[key] = normalized
     if set(decoder.values()) != set(ORDER):
-        raise ValueError("buckwalter map must cover the 28-glyph inventory")
+        raise ValueError("scheme map must cover the 28-glyph inventory")
     return frozendict(decoder)
 
 
