@@ -7,10 +7,11 @@ A **possible root** is a triliteral consonant sequence that is
 *phonotactically legal* but *unattested* in the lexicon. The permissive
 baseline is every `28³ = 21952` candidate over the 28-consonant inventory;
 the co-occurrence matrices remove only pairs backed by a cited source. With
-the shipped matrices there are **21168** legal roots; subtracting the **3957**
-attested MSA roots that are also legal leaves **17211** possible roots. (Two
-further attested roots are phonotactically illegal and are reported as a
-warning.) The CLI emits possible roots.
+the shipped matrices (the `self` and `homorganic` gates ANDed per position)
+there are **13656** legal roots; subtracting the **3715** attested MSA roots
+that are also legal leaves **9941** possible roots. (A further **244**
+attested roots are phonotactically illegal and are reported as a warning.) The
+CLI emits possible roots.
 
 ## Requirements
 
@@ -38,7 +39,7 @@ uv run python -m arabic_roots --limit 10
 
 | Flag         | Default       | Meaning                                              |
 |--------------|---------------|------------------------------------------------------|
-| `--data-dir` | `<repo>/data` | Data root holding `rules/` (`m_1-2.csv`, `m_2-3.csv`) |
+| `--data-dir` | `<repo>/data` | Data root holding `rules/` (per-type `m_1-2`/`m_2-3` matrices) |
 | `--limit`    | `10`          | How many sample roots to print (`0` prints none)     |
 | `--output`   | none          | Output path; format inferred from suffix (`.tsv`, `.csv`) |
 | `--scheme`   | `arabic`      | Output scheme: `arabic`, `din31635`, `ijmes`, `ipa`  |
@@ -78,18 +79,24 @@ console script, not a file. See `docs/running.md` for failure modes.
 
 ```text
 data/
-  rules/m_1-2.csv              # C1–C2 gate, 28×28 bool
-  rules/m_2-3.csv              # C2–C3 gate, 28×28 bool
+  rules/m_1-2_self.csv             # C1–C2 identity gate, 28×28 bool (diag 0)
+  rules/m_1-2_homorganic.csv       # C1–C2 natural-class gate
+  rules/m_2-3_self.csv             # C2–C3 identity gate, 28×28 bool (diag 1)
+  rules/m_2-3_homorganic.csv       # C2–C3 natural-class gate
   roots/attested.csv           # MSA attested roots: c1,c2,c3,variety,source
   transliterations/buckwalter.csv  # ingest-only encoding table
 ```
 
-Rules live **only** in `data/rules/*.csv`. Each cell is `1` (pair may
-co-occur) or `0` (forbidden). The `m_1-2` diagonal is `0` (`C1 ≠ C2`;
-Greenberg 1950, *The Patterning of Root Morphemes in Semitic*, WORD 6:2,
-p.162) while the `m_2-3` diagonal stays `1` (`C2 = C3` permitted); that
-asymmetry is an evidence-based rule, not a default. Every `0` needs a page
-citation plus a regression test.
+Rules live **only** in `data/rules/*.csv`. Each position is assembled from one
+or more *matrix types* (`m_{position}_{type}.csv`) combined by logical **AND**
+— a pair is legal only if every selected matrix allows it. Each cell is `1`
+(pair may co-occur) or `0` (forbidden). The `self` gate carries the identity
+rule: the `m_1-2` diagonal is `0` (`C1 ≠ C2`; Greenberg 1950, *The Patterning
+of Root Morphemes in Semitic*, WORD 6:2, p.162) while the `m_2-3` diagonal
+stays `1` (`C2 = C3` permitted); that asymmetry is an evidence-based rule, not
+a default. The `homorganic` gate forbids the two distinct members of a natural
+class from being adjacent (McCarthy 1988, *Feature geometry and dependency*,
+Phonetica 45:84-108). Every `0` needs a page citation plus a regression test.
 
 ## Architecture
 
@@ -98,7 +105,7 @@ Standard `src/` layout, package `arabic_roots`:
 | Module | Responsibility |
 |--------|----------------|
 | `alphabet.py` | 28-glyph source of truth: `ORDER`, `LETTERS`, `LOOKUP`, place/manner |
-| `phonotactics.py` | `load_matrices()` + `successors(matrix, order)` |
+| `phonotactics.py` | `load_matrices()` / `load_matrix()` composition + `successors(matrix, order)` |
 | `enumerator.py` | `iter_roots()` / `count_roots()` via matrix-successor walk (memoized) |
 | `attestation.py` | `load_attested()` + `is_attested()` over `data/roots/attested.csv` |
 | `possible.py` | `iter_possible()` / `count_possible()`: legal minus attested |

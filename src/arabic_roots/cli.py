@@ -43,7 +43,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--data-dir",
         type=Path,
         default=DATA_DIR,
-        help="Data root holding rules/ with m_1-2.csv and m_2-3.csv.",
+        help="Data root holding rules/ with per-type m_1-2/m_2-3 matrices.",
     )
 
     parser.add_argument(

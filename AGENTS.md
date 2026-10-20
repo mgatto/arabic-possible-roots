@@ -18,7 +18,7 @@ Standard `src/` layout, package `arabic_roots`:
 ```text
 src/arabic_roots/
   alphabet.py       # 28-glyph source of truth: ORDER, LETTERS, LOOKUP, Place/Manner
-  phonotactics.py   # load_matrices() + successors(matrix, order)
+  phonotactics.py   # load_matrices()/load_matrix() composition + successors(matrix, order)
   enumerator.py     # iter_roots() / count_roots() via matrix-successor walk (memoized)
   arabic_chain_bank_provider.py # ArabicChainBank build-time extraction/dedupe (pure, no I/O)
   transliteration.py# scheme encode/decode (Buckwalter now; DIN/IJMES/IPA later)
@@ -29,8 +29,10 @@ src/arabic_roots/
   render.py         # output transliteration schemes (arabic/din31635/ijmes/ipa)
   cli.py            # `enumerate-roots` console script
   __main__.py       # `python -m arabic_roots` delegate to cli.main
-data/rules/m_1-2.csv            # C1–C2 gate, 28×28 bool, diag=0 (C1≠C2, Greenberg 1950 p.162)
-data/rules/m_2-3.csv            # C2–C3 gate, 28×28 bool, diag=1 (C2=C3 permitted)
+data/rules/m_1-2_self.csv       # C1–C2 identity gate, 28×28 bool, diag=0 (C1≠C2, Greenberg 1950 p.162)
+data/rules/m_1-2_homorganic.csv # C1–C2 natural-class gate (McCarthy 1988)
+data/rules/m_2-3_self.csv       # C2–C3 identity gate, 28×28 bool, diag=1 (C2=C3 permitted)
+data/rules/m_2-3_homorganic.csv # C2–C3 natural-class gate (McCarthy 1988)
 data/roots/attested.csv         # MSA attested roots: c1,c2,c3,variety,source (NFC)
 data/transliterations/buckwalter.csv # ingest-only encoding table: glyph,buckwalter (28 rows)
 data/transliterations/ijmes.csv      # output scheme table: glyph,ijmes (28 rows)
@@ -43,7 +45,11 @@ tests/              # alphabet, matrices, golden-count, chain-bank, attestation,
 ../Media/           # PDFs, IPA scans (outside git)
 ```
 
-Rules live **only** in `data/rules/*.csv`. `statemachine.py` carries literals and
+Rules live **only** in `data/rules/*.csv`. Each position is assembled from
+per-type matrices (`m_{position}_{type}.csv`, types `self` and `homorganic`)
+combined by logical AND in `phonotactics.load_matrices()` — a pair is legal
+only if every selected type allows it; `load_matrix(position, types)` composes
+one position explicitly. `statemachine.py` carries literals and
 queries matrices in `pair12_allowed` / `pair23_allowed`; never add rule logic
 there. `phonotactics.successors()` turns each matrix into per-glyph successor
 lists, and `enumerator.py` walks those lists (never generating a forbidden
@@ -90,10 +96,14 @@ stub alphabet — ported and fixed under `src/`.
 - Empty stubs: `Architecture.md`, `Phonotactic Rules for Arabic.md`, `Why.md`.
   Never invent a prohibition: each `0` in a matrix needs `TODO(Ryder:p.X)` or a
   page citation plus a regression test pinning the pair.
-- The `m_1-2` diagonal is `0` (`C1 ≠ C2`; Greenberg 1950, *The Patterning of
-  Root Morphemes in Semitic*, WORD 6:2, p.162) while the `m_2-3` diagonal stays
-  `1` (`C2 = C3` permitted). This asymmetry is an evidence-based rule, pinned in
-  `tests/test_enumeration.py`.
+- The `m_1-2_self` diagonal is `0` (`C1 ≠ C2`; Greenberg 1950, *The Patterning of
+  Root Morphemes in Semitic*, WORD 6:2, p.162) while the `m_2-3_self` diagonal
+  stays `1` (`C2 = C3` permitted). This asymmetry is an evidence-based rule,
+  pinned in `tests/test_enumeration.py`.
+- The `homorganic` matrices forbid the two *distinct* members of one natural
+  class from being adjacent (McCarthy 1988, *Feature geometry and dependency*,
+  Phonetica 45:84-108); their diagonals stay `1`. Both homorganic CSVs are
+  byte-identical, pinned in `tests/test_matrices.py`.
 - Ignore `Master FF Internals.md` (unrelated Firefox note).
 - `Misc.md` complete-graph idea is rejected: `28²` transitions per position is
   unmaintainable; matrices + guards replace it.
@@ -115,8 +125,10 @@ stub alphabet — ported and fixed under `src/`.
   (`buckwalter.csv` ingest-only; `ijmes.csv` output) and loaded at runtime by
   `transliteration.py` / `render.py`, so no Buckwalter or IJMES symbol appears
   in `.py`. Tests may use IJMES literals (see §7).
-- CSVs: UTF-8/NFC, LF. Matrices (`data/rules/`): first column + header = glyphs
-  in `ORDER`, cells `0`/`1`. `data/roots/attested.csv`: header
+- CSVs: UTF-8/NFC, LF. Matrices (`data/rules/`): one file per
+  `m_{position}_{type}.csv` (`position` ∈ `1-2`/`2-3`, `type` ∈ `self`/
+  `homorganic`), first column + header = glyphs in `ORDER`, cells `0`/`1`.
+  `data/roots/attested.csv`: header
   `c1,c2,c3,variety,source`, glyph cells in `ORDER`.
   `data/transliterations/*.csv`: header `glyph,<scheme>`, glyph column exactly
   `ORDER` (`buckwalter.csv`, `ijmes.csv`).
@@ -159,8 +171,10 @@ uv run enumerate-roots --limit 5
 
 - Imports: `from arabic_roots.alphabet import ORDER, normalize_glyph` (never
   `sys.path` hacks; package resolves via `[tool.setuptools.packages.find]`).
-- Data access: `load_matrices()` defaults to `<repo>/data` and reads its
-  `rules/` sub-directory; pass the data root explicitly in tests via `tmp_path`.
+- Data access: `load_matrices()` defaults to `<repo>/data`, reads its `rules/`
+  sub-directory, and ANDs the `self`+`homorganic` types per position by
+  default; `load_matrix(position, types)` composes one position. Pass the data
+  root explicitly in tests via `tmp_path`.
 - Matrix edits: change CSV + add pinning test + cite source in the same commit.
 - Attested data: `load_attested()` likewise defaults to `<repo>/data` and reads
   its `roots/` sub-directory.

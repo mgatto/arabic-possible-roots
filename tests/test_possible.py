@@ -51,10 +51,10 @@ def test_unknown_variety_subtracts_nothing(tmp_path: Path) -> None:
 
 
 def test_golden_possible_count() -> None:
-    """The shipped data yields the pinned 17211 possible roots."""
+    """The shipped data yields the pinned 9941 possible roots."""
     m_1_2, m_2_3 = load_matrices()
     attested = load_attested()
-    assert count_possible(m_1_2, m_2_3, attested) == 17211
+    assert count_possible(m_1_2, m_2_3, attested) == 9941
 
 
 def test_attested_illegal_detects_inconsistency(tmp_path: Path) -> None:
@@ -72,10 +72,10 @@ def test_attested_illegal_detects_inconsistency(tmp_path: Path) -> None:
 
 
 def test_shipped_illegal_attested() -> None:
-    """The shipped lexicon has exactly two phonotactically illegal roots."""
+    """The shipped lexicon has exactly 244 phonotactically illegal roots."""
     m_1_2, m_2_3 = load_matrices()
     attested = load_attested()
-    assert attested_illegal(m_1_2, m_2_3, attested) == (
-        ("ب", "ب", "ر"),
-        ("و", "و", "ح"),
-    )
+    illegal = attested_illegal(m_1_2, m_2_3, attested)
+    assert len(illegal) == 244
+    assert illegal[0] == ("ء", "ح", "ح")
+    assert illegal[-1] == ("ي", "و", "م")

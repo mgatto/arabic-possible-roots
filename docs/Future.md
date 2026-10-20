@@ -184,6 +184,12 @@ ME: note that IPA probably would not be appropriate here!
 
 ## PRD 4 — Citable consonant natural classes (McCarthy's excluding categories)
 
+> **Partially implemented (2026-10-19) — see `docs/Completed.md`.** The
+> `homorganic` matrices are now consumed at runtime (`load_matrix` /
+> `load_matrices` compose `self` + `homorganic` per position), with the class
+> membership asserted in `tests/test_matrices.py`. The typed, source-carrying
+> `CATEGORIES` table itself is still open.
+
 ### Background
 
 The provisional `CATEGORIES` map in `alphabet.py` was removed: it carried no

@@ -60,12 +60,12 @@ def test_main_unknown_suffix_errors(tmp_path: Path) -> None:
 
 
 def test_main_outputs_possible_roots_only(tmp_path: Path) -> None:
-    """The written file holds possible roots: 17211 rows, no attested ك-ت-ب."""
+    """The written file holds possible roots: 9941 rows, no attested ك-ت-ب."""
     target = tmp_path / "roots.tsv"
     assert main(["--limit", "0", "--output", str(target)]) == 0
     lines = target.read_text(encoding="utf-8").splitlines()
     assert lines[0] == "c1\tc2\tc3"
-    assert len(lines) == 17211 + 1
+    assert len(lines) == 9941 + 1
     assert "ك\tت\tب" not in lines
 
 
@@ -106,8 +106,8 @@ def test_main_writes_timestamped_log_file(
     text = log.read_text(encoding="utf-8")
     assert "run: " in text
     assert "inputs: " in text
-    assert "Allowed triliteral roots: 21168" in text
-    assert "Possible triliteral roots: 17211" in text
+    assert "Allowed triliteral roots: 13656" in text
+    assert "Possible triliteral roots: 9941" in text
     assert "variety=msa" in text
     assert re.search(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2} ", text, re.MULTILINE)
     assert "run: " in capsys.readouterr().err

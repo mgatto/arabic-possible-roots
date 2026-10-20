@@ -421,3 +421,84 @@ there and a full entry here.
 - **Follow-ups:**
   - `--log-level`/`--quiet`, log rotation, and input hashes/pins remain future
     options.
+
+---
+
+## Data — Homorganic natural-class matrices (`m_1-2_homorganic.csv`, `m_2-3_homorganic.csv`)
+
+- **Completed:** 2026-10-19
+- **Commit:** TBD (agent does not commit; fill in after merge)
+- **Summary:** Encoded the homorganic co-occurrence prohibition — no two
+  *distinct* consonants of one natural class may be adjacent — into the
+  standalone `*_homorganic.csv` rule matrices. Both files were filled from the
+  six classes (labials, coronal obstruents, coronal sonorants, velars,
+  gutturals, dorsal sonorants) and made byte-identical. The `ب` row label in
+  `m_1-2_homorganic.csv`, previously a stray ASCII `1`, was repaired.
+- **Source:** McCarthy, J. J. (1988). *Feature geometry and dependency: A
+  review*. Phonetica, 45(2-4), 84-108.
+- **Deliverables:**
+  - `data/rules/m_1-2_homorganic.csv` — 160 ordered off-diagonal same-class
+    pairs set to `0` (diagonals untouched; pre-existing `ي-ي = 0` preserved);
+    161 zeros total; row label `1` → `ب`.
+  - `data/rules/m_2-3_homorganic.csv` — byte-identical copy of the above.
+  - `tests/test_matrices.py` — `test_homorganic_matrices_encode_natural_classes`
+    reads both CSVs directly and pins axes (== `alphabet.ORDER`), the 160
+    forbidden pairs, untouched diagonals (except `ي-ي`), and byte-identity.
+- **Acceptance evidence:**
+  - `uv run pytest tests/test_matrices.py` green; full suite green.
+  - `ruff check`, `ruff format --check`, `mypy --strict`, `ty check` clean.
+- **Deviations:**
+  - Not a `docs/Future.md` PRD; originated from the matrix edit request.
+- **Resolved open questions (decisions):**
+  - Off-diagonal only — a consonant is barred from the *other* members of its
+    class, so same-glyph diagonal cells are left as-is.
+  - Both homorganic files updated to keep `C1+C2` and `C2+C3` in sync.
+  - The stray `ي-ي = 0` is preserved, not extended.
+- **Follow-ups:**
+  - The `*_homorganic.csv` files are still not consumed by `load_matrices()`;
+    wiring the natural classes into a typed, cited table remains PRD 4.
+
+---
+
+## Runtime — Compose `self` + `homorganic` matrices per position
+
+- **Completed:** 2026-10-19
+- **Commit:** TBD (agent does not commit; fill in after merge)
+- **Summary:** Wired the homorganic rule into the runtime. Each position is now
+  assembled from per-type matrices (`m_{position}_{type}.csv`) combined by
+  logical AND. `load_matrices()` composes the default `(self, homorganic)` set
+  for both C1-C2 and C2-C3; `load_matrix(position, types)` composes one
+  position explicitly. The base matrices were renamed `m_1-2.csv` /
+  `m_2-3.csv` → `m_1-2_self.csv` / `m_2-3_self.csv`, and the stray `ي-ي = 0`
+  was removed from both homorganic files (off-diagonal-only rule).
+- **Source:** McCarthy, J. J. (1988). *Feature geometry and dependency: A
+  review*. Phonetica, 45(2-4), 84-108 (homorganic); Greenberg 1950 (self
+  diagonal).
+- **Deliverables:**
+  - `src/arabic_roots/phonotactics.py` — `MatrixType` (`SELF`, `HOMORGANIC`),
+    `DEFAULT_TYPES`, `load_matrix()`, `load_matrices()` (now per-position type
+    arguments, positional `data_dir` preserved).
+  - `data/rules/` — `m_1-2_self.csv`, `m_2-3_self.csv`, plus the two homorganic
+    files with `ي-ي` cleaned.
+  - `statemachine.py` docstring, `cli.py` `--data-dir` help updated.
+  - Tests: `test_matrices.py` (composition, AND semantics, empty/missing/axis
+    errors), recomputed goldens in `test_enumeration.py`, `test_possible.py`,
+    `test_cli.py`.
+  - Docs: `README.md`, `docs/running.md`, `docs/Future.md` (PRD 4 marker),
+    `AGENTS.md`.
+- **Acceptance evidence:**
+  - `uv run pytest` green; goldens recomputed: **13656** allowed, **9941**
+    possible, **244** attested-but-illegal.
+  - `ruff check`, `ruff format --check`, `mypy --strict`, `ty check` clean.
+- **Deviations:**
+  - Not a `docs/Future.md` PRD; originated from the request to consume the
+    homorganic matrices.
+- **Resolved open questions (decisions):**
+  - Default composes `self` + `homorganic`; types are selectable per position.
+  - Renamed both self matrices for a uniform `m_{position}_{type}.csv` scheme.
+  - Cleaning the stray `ي-ي` changed allowed 13630 → 13656 and illegal 254 →
+    244.
+  - CLI keeps the defaults; no new flags.
+- **Follow-ups:**
+  - The typed, source-carrying `CATEGORIES` / `NaturalClass` table (PRD 4) is
+    still open; only the per-pair homorganic CSV is shipped.

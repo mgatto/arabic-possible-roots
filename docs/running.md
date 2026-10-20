@@ -43,7 +43,7 @@ tab-separated):
 
 | Flag         | Default       | Meaning                                              |
 |--------------|---------------|------------------------------------------------------|
-| `--data-dir` | `<repo>/data` | Data root holding `rules/` (`m_1-2.csv`, `m_2-3.csv`)  |
+| `--data-dir` | `<repo>/data` | Data root holding `rules/` (per-type `m_1-2`/`m_2-3` matrices) |
 | `--limit`    | `10`          | How many sample roots to print (`0` prints none)     |
 | `--output`   | none          | Output path; format inferred from suffix (`.tsv`, `.csv`) |
 | `--scheme`   | `arabic`      | Output scheme: `arabic`, `din31635`, `ijmes`, `ipa`  |
@@ -81,9 +81,9 @@ lexicon attests a root the matrices forbid:
 ```text
 2026-10-11T13:45:00 INFO run: data_dir=… limit=10 output=none format=none scheme=arabic delimiter='-' variety=msa
 2026-10-11T13:45:00 INFO inputs: rules=…/rules roots=…/roots transliterations=…/transliterations
-2026-10-11T13:45:00 INFO Allowed triliteral roots: 21168
-2026-10-11T13:45:00 INFO Possible triliteral roots: 17211
-2026-10-11T13:45:00 WARNING 2 attested roots are phonotactically illegal: ب-ب-ر, و-و-ح
+2026-10-11T13:45:00 INFO Allowed triliteral roots: 13656
+2026-10-11T13:45:00 INFO Possible triliteral roots: 9941
+2026-10-11T13:45:00 WARNING 244 attested roots are phonotactically illegal: ء-ح-ح, …
 ```
 
 Logs go to **stderr**; stdout carries only the `--limit` sample.

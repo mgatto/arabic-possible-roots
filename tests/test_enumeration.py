@@ -32,9 +32,9 @@ def test_permissive_baseline_is_28_cubed() -> None:
 
 
 def test_repo_matrix_count_is_pinned() -> None:
-    """Shipped matrices yield 21168 (M_1-2 diagonal zeroed: C1 != C2)."""
+    """Shipped gates yield 13656 (self AND homorganic composition)."""
     m_1_2, m_2_3 = load_matrices()
-    assert count_roots(m_1_2, m_2_3) == 21168
+    assert count_roots(m_1_2, m_2_3) == 13656
 
 
 def test_enumerator_matches_reference_oracle() -> None:
@@ -68,13 +68,13 @@ def test_zeroing_one_pair_removes_a_slice() -> None:
 def test_statemachine_guards_query_matrices() -> None:
     """Driver allows the permissive triple and blocks a zeroed pair."""
     m_1_2, m_2_3 = load_matrices()
-    ok_machine = TriliteralMachine(m_1_2, m_2_3, c1="ب", c2="ت", c3="ث")
+    ok_machine = TriliteralMachine(m_1_2, m_2_3, c1="ب", c2="ت", c3="ر")
     assert ok_machine.pair12_allowed() is True
     assert ok_machine.pair23_allowed() is True
 
     blocked_m_1_2 = m_1_2.copy()
     blocked_m_1_2.at["ب", "ت"] = False
-    blocked = TriliteralMachine(blocked_m_1_2, m_2_3, c1="ب", c2="ت", c3="ث")
+    blocked = TriliteralMachine(blocked_m_1_2, m_2_3, c1="ب", c2="ت", c3="ر")
     assert blocked.pair12_allowed() is False
 
     empty = TriliteralMachine(m_1_2, m_2_3)
@@ -85,7 +85,7 @@ def test_statemachine_guards_query_matrices() -> None:
 def test_statemachine_emits_permissive_root() -> None:
     """An all-1 triple walks r_0 -> r_3 via events."""
     m_1_2, m_2_3 = load_matrices()
-    machine = TriliteralMachine(m_1_2, m_2_3, c1="ب", c2="ت", c3="ث")
+    machine = TriliteralMachine(m_1_2, m_2_3, c1="ب", c2="ت", c3="ر")
     machine.send("emit_r1")
     machine.send("emit_r2")
     machine.send("emit_r3")
