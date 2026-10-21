@@ -12,8 +12,8 @@ uv run enumerate-roots --data-dir data --limit 10
 
 ```bash
 uv run enumerate-roots --data-dir data --limit 10   # primary console script
-uv run python -m arabic_roots --limit 10            # module path
-uv run python -m arabic_roots.cli --limit 10        # direct CLI module
+uv run python -m arabic_possible_roots --limit 10            # module path
+uv run python -m arabic_possible_roots.cli --limit 10        # direct CLI module
 ```
 
 More examples:
@@ -36,7 +36,7 @@ tab-separated):
 | Command                            | Why it fails                                                                                                                                                                  |
 |------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `python enumerate-roots …`         | `python` expects a script *file*; `enumerate-roots` is a generated binary in `.venv/bin/` (from `[project.scripts]`), not `./enumerate-roots` → `can't open file … [Errno 2]` |
-| `python -m enumerate-roots`        | No such module; the module is `arabic_roots.cli` (dashes aren't valid module names)                                                                                           |
+| `python -m enumerate-roots`        | No such module; the module is `arabic_possible_roots.cli` (dashes aren't valid module names)                                                                                           |
 | system `python` / `python3` (3.11) | Wrong interpreter; repo pins `==3.14.*` — only `uv run` guarantees 3.14.7                                                                                                     |
 
 ## Options
@@ -142,7 +142,7 @@ uv run python scripts/fetch_attested.py                     # pinned raw URL
 uv run python scripts/fetch_attested.py --lemmas /tmp/lemmas.csv --sha <sha>
 ```
 
-The runtime loader is `arabic_roots.attestation.load_attested()`; query one
+The runtime loader is `arabic_possible_roots.attestation.load_attested()`; query one
 triple with `is_attested(c1, c2, c3, attested, variety="msa")`. Re-pin the
 golden count in `tests/test_attestation.py` only when the upstream SHA changes.
 Do not edit `data/roots/attested.csv` by hand.

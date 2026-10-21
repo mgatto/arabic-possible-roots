@@ -13,22 +13,23 @@ utility beyond this specific project we're working in now.
 
 ## 2. Architecture
 
-Standard `src/` layout, package `arabic_roots`:
+Standard `src/` layout, package `arabic_possible_roots`:
 
 ```text
-src/arabic_roots/
+src/arabic_possible_roots/
+  __init__.py       # public API re-exports + __version__ (single-sourced via importlib.metadata)
+  py.typed          # PEP 561 marker (shipped via [tool.setuptools.package-data])
   alphabet.py       # 28-glyph source of truth: ORDER, LETTERS, LOOKUP, Place/Manner
   phonotactics.py   # load_matrices()/load_matrix() composition + successors(matrix, order)
   enumerator.py     # iter_roots() / count_roots() via matrix-successor walk (memoized)
   arabic_chain_bank_provider.py # ArabicChainBank build-time extraction/dedupe (pure, no I/O)
-  transliteration.py# scheme encode/decode (Buckwalter now; DIN/IJMES/IPA later)
+  transliteration.py# scheme encode/decode primitives (Buckwalter ingest, IJMES output)
   attestation.py    # load_attested() + is_attested() over data/roots/attested.csv
   possible.py       # iter_possible()/count_possible(): legal minus attested
-  statemachine.py   # TriliteralMachine: single-root guard prototype (tests only)
   writers.py        # suffix-driven output writers (tsv/csv/jsonl/parquet/sqlite)
   render.py         # output transliteration schemes (arabic/din31635/ijmes/ipa)
   cli.py            # `enumerate-roots` console script
-  __main__.py       # `python -m arabic_roots` delegate to cli.main
+  __main__.py       # `python -m arabic_possible_roots` delegate to cli.main
 data/rules/m_1-2_self.csv       # C1–C2 identity gate, 28×28 bool, diag=0 (C1≠C2, Greenberg 1950 p.162)
 data/rules/m_1-2_homorganic.csv # C1–C2 natural-class gate (McCarthy 1988)
 data/rules/m_2-3_self.csv       # C2–C3 identity gate, 28×28 bool, diag=1 (C2=C3 permitted)
@@ -38,7 +39,8 @@ data/transliterations/buckwalter.csv # ingest-only encoding table: glyph,buckwal
 data/transliterations/ijmes.csv      # output scheme table: glyph,ijmes (28 rows)
 scripts/            # build-time orchestrators (fetch_attested.py)
 docs/running.md     # how to run (commands, failure table, options)
-docs/Future.md      # unimplemented micro-PRDs (oracle, rendering)
+docs/releasing.md   # commitizen release workflow (cz bump / tag / push)
+docs/Future.md      # open micro-PRDs (natural classes, branded glyph)
 docs/Completed.md   # shipped micro-PRDs ledger (date, SHA, evidence)
 tests/              # alphabet, matrices, golden-count, chain-bank, attestation, cli
 ../Notes/           # Obsidian knowledge bank (outside git, read-only ref)
@@ -49,14 +51,12 @@ Rules live **only** in `data/rules/*.csv`. Each position is assembled from
 per-type matrices (`m_{position}_{type}.csv`, types `self` and `homorganic`)
 combined by logical AND in `phonotactics.load_matrices()` — a pair is legal
 only if every selected type allows it; `load_matrix(position, types)` composes
-one position explicitly. `statemachine.py` carries literals and
-queries matrices in `pair12_allowed` / `pair23_allowed`; never add rule logic
-there. `phonotactics.successors()` turns each matrix into per-glyph successor
-lists, and `enumerator.py` walks those lists (never generating a forbidden
-pair), memoizing the materialized triples on matrix content — it is the batch
-path and the only production enumeration route. `TriliteralMachine` is a
-single-root guard prototype — it validates one triple at a time and is
-exercised by tests only; it is **not** on the enumeration path.
+one position explicitly. `phonotactics.successors()` turns each matrix into
+per-glyph successor lists, and `enumerator.py` walks those lists (never
+generating a forbidden pair), memoizing the materialized triples on matrix
+content — it is the batch path and the only production enumeration route.
+(The former single-root guard prototype `statemachine.py` was archived to
+`_Archive/`; its oracle idea is dropped — see `docs/Future.md`.)
 
 Attestation is a separate axis from phonotactics. `attestation.py` reads
 `data/roots/attested.csv` (MSA triliteral roots: `c1,c2,c3,variety,source`) and
@@ -146,9 +146,9 @@ uv run enumerate-roots --limit 5
 ```
 
 - `ruff`: `py314`, line-length 88, `E,F,I,UP,B,W,N,C90`.
-- `mypy --strict` (+ `pandas-stubs`; `statemachine.*` is `ignore_missing_imports`).
+- `mypy --strict` (+ `pandas-stubs`).
 - `ty check` is also the opencode LSP backend (see §6); keep it clean.
-- `pytest --cov=arabic_roots`; target 100% on `alphabet`/`phonotactics`.
+- `pytest --cov=arabic_possible_roots`; target 100% on `alphabet`/`phonotactics`.
 - No `print()` in `src/` (logging only; `cli.py` stdout for roots is the one
   exception). Immutability: `frozendict`, `tuple`, `NamedTuple`. No new deps
   without justification; the Parquet writer's `pyarrow` is an opt-in extra
@@ -169,7 +169,7 @@ uv run enumerate-roots --limit 5
 
 ## 7. Conventions
 
-- Imports: `from arabic_roots.alphabet import ORDER, normalize_glyph` (never
+- Imports: `from arabic_possible_roots.alphabet import ORDER, normalize_glyph` (never
   `sys.path` hacks; package resolves via `[tool.setuptools.packages.find]`).
 - Data access: `load_matrices()` defaults to `<repo>/data`, reads its `rules/`
   sub-directory, and ANDs the `self`+`homorganic` types per position by
@@ -183,7 +183,7 @@ uv run enumerate-roots --limit 5
   it by hand. Re-pin the golden count in `tests/test_attestation.py` when the
   source SHA changes.
 - CLI: `uv run enumerate-roots --data-dir data --limit 10 [--output roots.tsv]`
-  (alt: `uv run python -m arabic_roots …`); never `python enumerate-roots`
+  (alt: `uv run python -m arabic_possible_roots …`); never `python enumerate-roots`
   (not a file — it is a console script). The CLI emits possible roots (legal
   minus attested), logs both counts, and warns on attested-but-illegal roots.
   `--output` format is inferred from the suffix (`.tsv`/`.csv` headed
@@ -195,4 +195,12 @@ uv run enumerate-roots --limit 5
   embedded choices, counts, output) to a file, mirrored to stderr. See
   `docs/running.md`.
 - Git: Agent should not commit to Git and must leave that to the human engineer.
+- Versioning: `__version__` is single-sourced — `arabic_possible_roots.__version__`
+  reads `[project] version` from `pyproject.toml` via `importlib.metadata`
+  (never hand-edit a duplicate literal); `py.typed` is shipped via
+  `[tool.setuptools.package-data]`.
+- Releasing: `uv run cz bump` (commitizen) infers the next version from
+  Conventional Commits, rewrites `CHANGELOG.md` and `uv.lock`, commits, and tags
+  `vX.Y.Z`; the human then pushes (`git push origin --follow-tags`). The agent
+  never bumps/tags. See `docs/releasing.md`.
 - Keep `.idea/` and `.venv/` out of review diffs.

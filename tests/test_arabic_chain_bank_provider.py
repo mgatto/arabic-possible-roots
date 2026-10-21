@@ -4,14 +4,18 @@ import csv
 from collections.abc import Mapping
 from pathlib import Path
 
-from arabic_roots.arabic_chain_bank_provider import (
+from arabic_possible_roots.arabic_chain_bank_provider import (
     REASON_NOT_THREE,
     REASON_OUT_OF_INVENTORY,
     AttestedRow,
     build_rows,
     extract_root_strings,
 )
-from arabic_roots.transliteration import build_decoder, build_encoder, encode_root
+from arabic_possible_roots.transliteration import (
+    build_decoder,
+    build_encoder,
+    encode_root,
+)
 
 _MAP_PATH = (
     Path(__file__).resolve().parents[1] / "data" / "transliterations" / "buckwalter.csv"

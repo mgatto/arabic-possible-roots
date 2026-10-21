@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from arabic_roots.alphabet import ORDER
-from arabic_roots.attestation import is_attested, load_attested
+from arabic_possible_roots.alphabet import ORDER
+from arabic_possible_roots.attestation import is_attested, load_attested
 
 #: Pinned count of MSA triliteral roots derived from ArabicChainBank.
 GOLDEN_MSA_COUNT = 3959

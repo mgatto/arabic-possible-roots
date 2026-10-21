@@ -1,7 +1,7 @@
 """Adjacent-pair phonotactic matrices for triliteral roots.
 
 Two 28x28 boolean ``pandas.DataFrame`` objects share the fixed axis order
-from :mod:`arabic_roots.alphabet`:
+from :mod:`arabic_possible_roots.alphabet`:
 
 - ``M_1-2`` gates consonants 1-2 of the root.
 - ``M_2-3`` gates consonants 2-3 of the root.
@@ -38,7 +38,7 @@ from pathlib import Path
 import pandas as pd
 from frozendict import frozendict
 
-from arabic_roots.alphabet import ORDER, nfc
+from arabic_possible_roots.alphabet import ORDER, nfc
 
 __all__ = [
     "DATA_DIR",
@@ -87,12 +87,12 @@ def load_matrix(
 
     Returns:
         A boolean frame whose index and columns equal
-        :data:`arabic_roots.alphabet.ORDER`; a ``True`` cell means every
+        :data:`arabic_possible_roots.alphabet.ORDER`; a ``True`` cell means every
         selected matrix allows the ordered pair.
 
     Raises:
         ValueError: When ``matrix_types`` is empty or a matrix's axes do not
-            match :data:`arabic_roots.alphabet.ORDER`.
+            match :data:`arabic_possible_roots.alphabet.ORDER`.
         FileNotFoundError: When a requested ``m_{position}_{type}.csv`` is
             missing.
 
@@ -136,13 +136,13 @@ def load_matrices(
 
     Returns:
         ``(m_1_2, m_2_3)`` boolean frames whose index and columns are exactly
-        :data:`arabic_roots.alphabet.ORDER`. A ``True`` cell means every
+        :data:`arabic_possible_roots.alphabet.ORDER`. A ``True`` cell means every
         selected matrix allows the ordered pair.
 
     Raises:
         FileNotFoundError: When a requested CSV is missing.
         ValueError: When a selection is empty or axes do not match
-            :data:`arabic_roots.alphabet.ORDER`.
+            :data:`arabic_possible_roots.alphabet.ORDER`.
     """
     return (
         load_matrix(data_dir, "1-2", c1_c2),
@@ -159,7 +159,7 @@ def successors(
     Args:
         matrix: A boolean co-occurrence matrix from :func:`load_matrices`.
         order: Axis order to preserve in each successor tuple; defaults to
-            :data:`arabic_roots.alphabet.ORDER`.
+            :data:`arabic_possible_roots.alphabet.ORDER`.
 
     Returns:
         A ``frozendict`` mapping each row glyph to the tuple of column glyphs

@@ -1,23 +1,23 @@
 [project]
-name = "arabic-roots"
-version = "0.5.0"
+name = "arabic-possible-roots"
+version = "0.6.0"
 description = "Enumerate triliteral Arabic roots constrained by phonotactic co-occurrence matrices"
 readme = "README.md"
 requires-python = "==3.14.*"
 dependencies = [
     "frozendict>=2.4.7",
     "pandas>=2.2",
-    "python-statemachine>=3.2.1",
 ]
 
 [project.optional-dependencies]
 output = ["pyarrow>=18"]
 
 [project.scripts]
-enumerate-roots = "arabic_roots.cli:main"
+enumerate-roots = "arabic_possible_roots.cli:main"
 
 [dependency-groups]
 dev = [
+    "commitizen>=4.2",
     "mypy>=1.18",
     "pandas-stubs>=2.2",
     "pyarrow>=18",
@@ -34,6 +34,21 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+# PEP 561: ship the py.typed marker so downstream mypy/ty pick up inline types.
+# (setuptools >=69 auto-includes py.typed experimentally; we declare it
+# explicitly because build-system pins only >=61.)
+arabic_possible_roots = ["py.typed"]
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+version_provider = "pep621"
+tag_format = "v$version"
+annotated_tag = true
+update_changelog_on_bump = true
+changelog_file = "CHANGELOG.md"
+pre_bump_hooks = ["uv lock"]
+
 [tool.ruff]
 target-version = "py314"
 line-length = 88
@@ -44,7 +59,7 @@ ignore = []
 
 [tool.ruff.lint.isort]
 force-single-line = false
-known-first-party = ["arabic_roots"]
+known-first-party = ["arabic_possible_roots"]
 
 [tool.mypy]
 strict = true
@@ -53,17 +68,17 @@ show_error_codes = true
 python_version = "3.14"
 mypy_path = "src"
 
-[[tool.mypy.overrides]]
-module = "statemachine.*"
-ignore_missing_imports = true
-
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "--strict-markers --cov=arabic_roots --cov-report=term-missing"
+addopts = "--strict-markers --cov=arabic_possible_roots --cov-report=term-missing"
 
 [tool.coverage.report]
 fail_under = 80
 exclude_also = ["if TYPE_CHECKING:", "raise AssertionError", "@(abc\\.)?abstractmethod"]
+
+[tool.ty.src]
+# _Archive/ is reference-only (stale imports, outside lint/tests); skip it.
+exclude = ["_Archive"]
 
 [tool.ty.environment]
 python-version = "3.14"

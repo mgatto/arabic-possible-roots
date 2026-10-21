@@ -6,7 +6,7 @@ Scheme symbols are data, not code:
 
 - ``arabic`` — the literal inventory glyph (identity).
 - ``din31635`` / ``ipa`` — typed ``Letter`` fields in
-  :mod:`arabic_roots.alphabet`.
+  :mod:`arabic_possible_roots.alphabet`.
 - ``ijmes`` — loaded from ``data/transliterations/ijmes.csv``; its digraph
   symbols stay out of ``src/`` per AGENTS §4.
 
@@ -20,9 +20,9 @@ from pathlib import Path
 
 from frozendict import frozendict
 
-from arabic_roots.alphabet import LETTERS, ORDER, nfc
-from arabic_roots.phonotactics import DATA_DIR
-from arabic_roots.transliteration import (
+from arabic_possible_roots.alphabet import LETTERS, ORDER, nfc
+from arabic_possible_roots.phonotactics import DATA_DIR
+from arabic_possible_roots.transliteration import (
     TRANSLITERATIONS_SUBDIR,
     build_decoder,
     build_encoder,
@@ -53,7 +53,7 @@ def build_schemes(data_dir: Path | None = None) -> Schemes:
 
     Args:
         data_dir: Data root holding ``transliterations/ijmes.csv``. Defaults to
-            :data:`arabic_roots.phonotactics.DATA_DIR`.
+            :data:`arabic_possible_roots.phonotactics.DATA_DIR`.
 
     Returns:
         A ``frozendict`` mapping each scheme name to its glyph -> symbol map.

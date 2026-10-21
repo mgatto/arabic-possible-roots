@@ -7,10 +7,10 @@ the transform stays unit-testable without the 2.5 MB source file.
 
 Upstream (CAMeL-Lab/ArabicChainBank, ``data/lemmas.csv``) exposes the root
 only in its Buckwalter ``ROOT`` column. Scheme encode/decode lives in
-:mod:`arabic_roots.transliteration`; this module owns the ACB-specific
+:mod:`arabic_possible_roots.transliteration`; this module owns the ACB-specific
 concerns: the pinned commit, the raw URL, the ``ROOT`` column and its
 separator, source labeling, requiring exactly three consonants,
-deduplicating, and ordering by :data:`arabic_roots.alphabet.ORDER`.
+deduplicating, and ordering by :data:`arabic_possible_roots.alphabet.ORDER`.
 
 The ``_provider`` name is descriptive, not a formal interface: no shared
 ``Provider`` protocol exists until a second source (e.g. lisan345) lands.
@@ -19,8 +19,8 @@ The ``_provider`` name is descriptive, not a formal interface: no shared
 from collections.abc import Iterable, Iterator, Mapping
 from typing import NamedTuple
 
-from arabic_roots.alphabet import ORDER
-from arabic_roots.transliteration import decode_root
+from arabic_possible_roots.alphabet import ORDER
+from arabic_possible_roots.transliteration import decode_root
 
 __all__ = [
     "DEFAULT_SHA",
@@ -135,7 +135,7 @@ def build_rows(
     Args:
         lemma_rows: Raw upstream lemma rows; only their ``ROOT`` cells are read.
         decoder: Symbol -> glyph map from
-            :func:`arabic_roots.transliteration.build_decoder`.
+            :func:`arabic_possible_roots.transliteration.build_decoder`.
         sha: Pinned upstream commit, recorded as ``arabicchainbank@<sha>``.
         variety: Variety label written to every row; defaults to ``"msa"``.
 

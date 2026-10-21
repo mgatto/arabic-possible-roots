@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/arabic-roots.iml" filepath="$PROJECT_DIR$/.idea/arabic-roots.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/arabic-possible-roots.iml" filepath="$PROJECT_DIR$/.idea/arabic-possible-roots.iml" />
     </modules>
   </component>
 </project>

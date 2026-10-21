@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from arabic_roots.render import (
+from arabic_possible_roots.render import (
     SCHEMES,
     build_schemes,
     iter_render_cells,
@@ -111,8 +111,8 @@ def test_build_schemes_missing_table_raises(tmp_path: Path) -> None:
 
 def test_no_rendering_in_core_modules() -> None:
     """Rendering stays at the I/O boundary; core modules never import it."""
-    src = Path(__file__).resolve().parents[1] / "src" / "arabic_roots"
-    for name in ("enumerator.py", "phonotactics.py", "statemachine.py"):
+    src = Path(__file__).resolve().parents[1] / "src" / "arabic_possible_roots"
+    for name in ("enumerator.py", "phonotactics.py"):
         text = (src / name).read_text(encoding="utf-8")
-        assert "arabic_roots.render" not in text
-        assert "arabic_roots.transliteration" not in text
+        assert "arabic_possible_roots.render" not in text
+        assert "arabic_possible_roots.transliteration" not in text

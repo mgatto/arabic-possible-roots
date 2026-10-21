@@ -1,9 +1,9 @@
 """Attested-root lookup loaded from ``data/roots/attested.csv``.
 
-Runtime counterpart to :mod:`arabic_roots.arabic_chain_bank_provider`. The CSV
+Runtime counterpart to :mod:`arabic_possible_roots.arabic_chain_bank_provider`. The CSV
 holds one row per ``(variety, c1, c2, c3)`` with literal Arabic glyphs from
-:data:`arabic_roots.alphabet.ORDER` and a ``source`` citation. This module
-mirrors :mod:`arabic_roots.phonotactics`: default ``<repo>/data`` (reading its
+:data:`arabic_possible_roots.alphabet.ORDER` and a ``source`` citation. This module
+mirrors :mod:`arabic_possible_roots.phonotactics`: default ``<repo>/data`` (reading its
 ``roots/`` sub-directory), an explicit ``data_dir`` for tests, and loud
 validation of malformed rows.
 """
@@ -14,8 +14,8 @@ from pathlib import Path
 import pandas as pd
 from frozendict import frozendict
 
-from arabic_roots.alphabet import normalize_glyph
-from arabic_roots.phonotactics import DATA_DIR
+from arabic_possible_roots.alphabet import normalize_glyph
+from arabic_possible_roots.phonotactics import DATA_DIR
 
 __all__ = ["ROOTS_SUBDIR", "load_attested", "is_attested"]
 
@@ -33,7 +33,7 @@ def load_attested(
     Args:
         data_dir: Data root holding the ``roots/`` sub-directory with
             ``attested.csv``. Defaults to
-            :data:`arabic_roots.phonotactics.DATA_DIR`.
+            :data:`arabic_possible_roots.phonotactics.DATA_DIR`.
 
     Returns:
         A ``frozendict`` mapping each ``variety`` to the frozenset of its

@@ -5,19 +5,23 @@ import logging
 import sys
 from pathlib import Path
 
-from arabic_roots.attestation import ROOTS_SUBDIR, load_attested
-from arabic_roots.enumerator import count_roots
-from arabic_roots.phonotactics import DATA_DIR, RULES_SUBDIR, load_matrices
-from arabic_roots.possible import attested_illegal, count_possible, iter_possible
-from arabic_roots.render import (
+from arabic_possible_roots.attestation import ROOTS_SUBDIR, load_attested
+from arabic_possible_roots.enumerator import count_roots
+from arabic_possible_roots.phonotactics import DATA_DIR, RULES_SUBDIR, load_matrices
+from arabic_possible_roots.possible import (
+    attested_illegal,
+    count_possible,
+    iter_possible,
+)
+from arabic_possible_roots.render import (
     SCHEMES,
     build_schemes,
     iter_render_cells,
     render_triple,
     validate_delimiter,
 )
-from arabic_roots.transliteration import TRANSLITERATIONS_SUBDIR
-from arabic_roots.writers import format_for_suffix, write_roots
+from arabic_possible_roots.transliteration import TRANSLITERATIONS_SUBDIR
+from arabic_possible_roots.writers import format_for_suffix, write_roots
 
 logger = logging.getLogger(__name__)
 

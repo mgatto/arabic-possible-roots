@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from arabic_roots.alphabet import ORDER
-from arabic_roots.transliteration import (
+from arabic_possible_roots.alphabet import ORDER
+from arabic_possible_roots.transliteration import (
     build_decoder,
     build_encoder,
     decode_root,

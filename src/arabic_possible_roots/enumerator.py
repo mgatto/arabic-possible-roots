@@ -1,7 +1,7 @@
 """Deterministic enumeration of triliteral candidates.
 
 Walks the co-occurrence matrices directly, following only ``1`` cells via
-:func:`arabic_roots.phonotactics.successors`, so forbidden pairs are never
+:func:`arabic_possible_roots.phonotactics.successors`, so forbidden pairs are never
 generated. The fully materialized result is memoized on matrix content, so
 repeated ``iter_roots`` / ``count_roots`` calls (the CLI makes three) reuse a
 single traversal.
@@ -11,8 +11,8 @@ from collections.abc import Iterator
 
 import pandas as pd
 
-from arabic_roots.alphabet import ORDER
-from arabic_roots.phonotactics import successors
+from arabic_possible_roots.alphabet import ORDER
+from arabic_possible_roots.phonotactics import successors
 
 __all__ = ["count_roots", "iter_roots"]
 
@@ -33,8 +33,10 @@ def _compiled(
     """Return the cached, fully materialized allowed triples.
 
     Args:
-        m_1_2: C1-C2 matrix from :func:`arabic_roots.phonotactics.load_matrices`.
-        m_2_3: C2-C3 matrix from :func:`arabic_roots.phonotactics.load_matrices`.
+        m_1_2: C1-C2 matrix from
+            :func:`arabic_possible_roots.phonotactics.load_matrices`.
+        m_2_3: C2-C3 matrix from
+            :func:`arabic_possible_roots.phonotactics.load_matrices`.
         order: Axis order to iterate.
 
     Returns:
@@ -75,10 +77,12 @@ def iter_roots(
     """Yield allowed ``(c1, c2, c3)`` triples in fixed ``order``.
 
     Args:
-        m_1_2: C1-C2 matrix from :func:`arabic_roots.phonotactics.load_matrices`.
-        m_2_3: C2-C3 matrix from :func:`arabic_roots.phonotactics.load_matrices`.
+        m_1_2: C1-C2 matrix from
+            :func:`arabic_possible_roots.phonotactics.load_matrices`.
+        m_2_3: C2-C3 matrix from
+            :func:`arabic_possible_roots.phonotactics.load_matrices`.
         order: Axis order to iterate; defaults to
-            :data:`arabic_roots.alphabet.ORDER`.
+            :data:`arabic_possible_roots.alphabet.ORDER`.
 
     Yields:
         Allowed triples of NFC inventory glyphs, in ORDER-lexicographic order
@@ -101,10 +105,12 @@ def count_roots(
     """Count allowed triples without re-walking the matrices.
 
     Args:
-        m_1_2: C1-C2 matrix from :func:`arabic_roots.phonotactics.load_matrices`.
-        m_2_3: C2-C3 matrix from :func:`arabic_roots.phonotactics.load_matrices`.
+        m_1_2: C1-C2 matrix from
+            :func:`arabic_possible_roots.phonotactics.load_matrices`.
+        m_2_3: C2-C3 matrix from
+            :func:`arabic_possible_roots.phonotactics.load_matrices`.
         order: Axis order to iterate; defaults to
-            :data:`arabic_roots.alphabet.ORDER`.
+            :data:`arabic_possible_roots.alphabet.ORDER`.
 
     Returns:
         The number of allowed triples, identical to

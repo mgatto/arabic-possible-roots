@@ -6,8 +6,8 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from arabic_roots.alphabet import ORDER, nfc
-from arabic_roots.phonotactics import (
+from arabic_possible_roots.alphabet import ORDER, nfc
+from arabic_possible_roots.phonotactics import (
     DATA_DIR,
     RULES_SUBDIR,
     MatrixType,

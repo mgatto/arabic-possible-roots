@@ -8,7 +8,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from arabic_roots.writers import format_for_suffix, write_roots
+from arabic_possible_roots.writers import format_for_suffix, write_roots
 
 _TRIPLES = [("ء", "ب", "ء"), ("ء", "ب", "ب")]
 

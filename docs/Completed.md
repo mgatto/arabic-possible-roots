@@ -37,10 +37,10 @@ there and a full entry here.
     `source=arabicchainbank@<sha>`.
   - `data/buckwalter.csv` — ingest-only encoding table (`glyph,buckwalter`),
     glyph column exactly `ORDER`; the single sanctioned Buckwalter location.
-  - `src/arabic_roots/transliteration.py` — scheme encode/decode
+  - `src/arabic_possible_roots/transliteration.py` — scheme encode/decode
     (`build_decoder` / `build_encoder`, `decode_root` / `encode_root`).
-  - `src/arabic_roots/ingest.py` — pure root extraction/dedupe (no I/O).
-  - `src/arabic_roots/attestation.py` — `load_attested()` / `is_attested()`.
+  - `src/arabic_possible_roots/ingest.py` — pure root extraction/dedupe (no I/O).
+  - `src/arabic_possible_roots/attestation.py` — `load_attested()` / `is_attested()`.
   - `scripts/fetch_attested.py` — stdlib-only build-time orchestrator.
   - `tests/test_transliteration.py`, `tests/test_ingest.py`,
     `tests/test_attestation.py`.
@@ -90,14 +90,14 @@ there and a full entry here.
   yield **21168** roots (was `21952`): `m_1-2` has a zeroed diagonal encoding
   `C1 ≠ C2`, while `m_2-3` keeps `C2 = C3`.
 - **Deliverables:**
-  - `src/arabic_roots/phonotactics.py` — added `successors()`; removed
+  - `src/arabic_possible_roots/phonotactics.py` — added `successors()`; removed
     `is_allowed`; docstring corrected for diagonal semantics.
-  - `src/arabic_roots/enumerator.py` — successor walk + unbounded content-keyed
+  - `src/arabic_possible_roots/enumerator.py` — successor walk + unbounded content-keyed
     triple cache; `count_roots` reads the cache.
   - `_Archive/is_allowed.py` — archived predicate (scratch, outside lint/tests).
   - `tests/test_enumeration.py`, `tests/test_matrices.py`, `tests/test_cli.py` —
     updated pins, embedded reference oracle, diagonal pinning test.
-  - `src/arabic_roots/statemachine.py` — stale docstring fixed.
+  - `src/arabic_possible_roots/statemachine.py` — stale docstring fixed.
   - `AGENTS.md` — §2 tree/prose, matrix comments, §3 citation note, §5
     reproducibility note.
   - `docs/enumeration-alternatives.md` — Decision section marked A + D accepted.
@@ -157,9 +157,9 @@ there and a full entry here.
   - Moved `data/attested.csv` → `data/roots/attested.csv`,
     `data/m_1-2.csv` + `data/m_2-3.csv` → `data/rules/`,
     `data/buckwalter.csv` → `data/transliterations/`.
-  - `src/arabic_roots/phonotactics.py` — added `RULES_SUBDIR = "rules"`;
+  - `src/arabic_possible_roots/phonotactics.py` — added `RULES_SUBDIR = "rules"`;
     `load_matrices()` reads `<data_dir>/rules/`.
-  - `src/arabic_roots/attestation.py` — added `ROOTS_SUBDIR = "roots"`;
+  - `src/arabic_possible_roots/attestation.py` — added `ROOTS_SUBDIR = "roots"`;
     `load_attested()` reads `<data_dir>/roots/`.
   - `scripts/fetch_attested.py` — default out/map paths updated.
   - Docstrings/paths updated: `cli.py`, `statemachine.py`, `transliteration.py`,
@@ -201,9 +201,9 @@ there and a full entry here.
   only the standard library (`csv`) and stream one root per row, preserving
   ORDER-lexicographic order.
 - **Deliverables:**
-  - `src/arabic_roots/writers.py` — `format_for_suffix()` +
+  - `src/arabic_possible_roots/writers.py` — `format_for_suffix()` +
     `write_roots()`, a `_write_delimited` core with `_write_tsv`/`_write_csv`.
-  - `src/arabic_roots/cli.py` — delegates `--output` to `write_roots`;
+  - `src/arabic_possible_roots/cli.py` — delegates `--output` to `write_roots`;
     `parser.error()` on an unsupported suffix; updated help/docstring.
   - `tests/test_writers.py` — suffix resolution, headers, parent-dir creation,
     unknown-suffix errors.
@@ -245,9 +245,9 @@ there and a full entry here.
   logs both counts and warns that **2** attested roots are phonotactically
   illegal (`ب-ب-ر`, `و-و-ح`) — a rules-vs-lexicon disagreement.
 - **Deliverables:**
-  - `src/arabic_roots/possible.py` — `iter_possible()` / `count_possible()` /
+  - `src/arabic_possible_roots/possible.py` — `iter_possible()` / `count_possible()` /
     `attested_illegal()` (pure, no I/O, no cache).
-  - `src/arabic_roots/cli.py` — loads matrices + attested; logs `Allowed` and
+  - `src/arabic_possible_roots/cli.py` — loads matrices + attested; logs `Allowed` and
     `Possible`; warns on illegal attested; stdout sample and `--output` both
     consume `iter_possible(...)`.
   - `tests/test_possible.py` — subtraction, order, unknown variety, golden
@@ -294,11 +294,11 @@ there and a full entry here.
   the path (not a `TextIO`). All writers consume the streaming possible-roots
   iterable and preserve ORDER; no CLI flags changed.
 - **Deliverables:**
-  - `src/arabic_roots/writers.py` — `_Writer = Callable[[Path, Iterable[Triple]], int]`;
+  - `src/arabic_possible_roots/writers.py` — `_Writer = Callable[[Path, Iterable[Triple]], int]`;
     `_write_jsonl`, `_write_parquet`, `_write_sqlite`; suffix map extended.
   - `pyproject.toml` — `[project.optional-dependencies] output = ["pyarrow>=18"]`
     plus `pyarrow` in the dev group; `uv.lock` updated (pyarrow 26.0.0).
-  - `src/arabic_roots/cli.py` — `--output` help lists all five suffixes.
+  - `src/arabic_possible_roots/cli.py` — `--output` help lists all five suffixes.
   - `tests/test_writers.py` — JSONL bytes/key-order/no-escapes, Parquet
     round-trip + missing-engine `ValueError`, SQLite round-trip / duplicate-PK /
     replace-existing, per-suffix dispatch.
@@ -345,12 +345,12 @@ there and a full entry here.
 - **Deliverables:**
   - `data/transliterations/ijmes.csv` — `glyph,ijmes` (28 rows), sourced from
     the owned IJMES chart (`Notes/TransChart 1.pdf`).
-  - `src/arabic_roots/render.py` — `SCHEMES`, `build_schemes`,
+  - `src/arabic_possible_roots/render.py` — `SCHEMES`, `build_schemes`,
     `render_cell`/`render_cells`/`iter_render_cells`/`render_triple`,
     `validate_delimiter`.
-  - `src/arabic_roots/transliteration.py` — `TRANSLITERATIONS_SUBDIR`;
+  - `src/arabic_possible_roots/transliteration.py` — `TRANSLITERATIONS_SUBDIR`;
     `build_decoder(..., symbol_column="buckwalter")` generalized for IJMES.
-  - `src/arabic_roots/cli.py` — `--scheme`/`--delimiter`; stdout and `--output`
+  - `src/arabic_possible_roots/cli.py` — `--scheme`/`--delimiter`; stdout and `--output`
     rendering.
   - `tests/test_render.py`, `tests/test_cli.py` (scheme/delimiter cases),
     `tests/test_transliteration.py` (generic message match).
@@ -393,7 +393,7 @@ there and a full entry here.
   appends the same timestamped records (UTF-8) alongside stderr. Scope was
   widened from the original PRD (file logging was a non-goal).
 - **Deliverables:**
-  - `src/arabic_roots/cli.py` — `--log-file`; `_configure_logging` (stderr +
+  - `src/arabic_possible_roots/cli.py` — `--log-file`; `_configure_logging` (stderr +
     appending `FileHandler`, timestamped `%Y-%m-%dT%H:%M:%S`); banner/inputs/
     summary lines; up-front `--output` suffix validation.
   - `tests/test_cli.py` — log-file (timestamped, mirrored to stderr), append
@@ -475,7 +475,7 @@ there and a full entry here.
   review*. Phonetica, 45(2-4), 84-108 (homorganic); Greenberg 1950 (self
   diagonal).
 - **Deliverables:**
-  - `src/arabic_roots/phonotactics.py` — `MatrixType` (`SELF`, `HOMORGANIC`),
+  - `src/arabic_possible_roots/phonotactics.py` — `MatrixType` (`SELF`, `HOMORGANIC`),
     `DEFAULT_TYPES`, `load_matrix()`, `load_matrices()` (now per-position type
     arguments, positional `data_dir` preserved).
   - `data/rules/` — `m_1-2_self.csv`, `m_2-3_self.csv`, plus the two homorganic

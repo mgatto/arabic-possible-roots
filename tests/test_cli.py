@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from arabic_roots.cli import build_parser, main
+from arabic_possible_roots.cli import build_parser, main
 
 
 def test_parser_defaults() -> None:
@@ -123,7 +123,7 @@ def test_main_log_file_appends(tmp_path: Path) -> None:
 
 def test_main_logs_banner_fields(caplog: pytest.LogCaptureFixture) -> None:
     """The run banner records effective options and embedded choices."""
-    with caplog.at_level(logging.INFO, logger="arabic_roots.cli"):
+    with caplog.at_level(logging.INFO, logger="arabic_possible_roots.cli"):
         assert main(["--limit", "0", "--scheme", "din31635"]) == 0
     messages = [record.getMessage() for record in caplog.records]
     assert any("run: " in message for message in messages)

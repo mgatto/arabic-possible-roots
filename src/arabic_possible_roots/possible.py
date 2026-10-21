@@ -1,8 +1,8 @@
 """Attested-root subtraction: the possible (legal but unattested) roots.
 
 Composition layer over the two independent axes —
-:mod:`arabic_roots.enumerator` (rules only) and
-:mod:`arabic_roots.attestation` (lexicon). It filters the memoized enumeration
+:mod:`arabic_possible_roots.enumerator` (rules only) and
+:mod:`arabic_possible_roots.attestation` (lexicon). It filters the memoized enumeration
 against a variety's attested ``frozenset`` (O(1) membership), yielding the
 project's target concept: *possible roots*.
 
@@ -16,8 +16,8 @@ from itertools import filterfalse
 
 import pandas as pd
 
-from arabic_roots.alphabet import ORDER
-from arabic_roots.enumerator import iter_roots
+from arabic_possible_roots.alphabet import ORDER
+from arabic_possible_roots.enumerator import iter_roots
 
 __all__ = ["attested_illegal", "count_possible", "iter_possible"]
 
@@ -35,13 +35,15 @@ def iter_possible(
     """Yield legal-but-unattested triples in fixed ``order``.
 
     Args:
-        m_1_2: C1-C2 matrix from :func:`arabic_roots.phonotactics.load_matrices`.
-        m_2_3: C2-C3 matrix from :func:`arabic_roots.phonotactics.load_matrices`.
+        m_1_2: C1-C2 matrix from
+            :func:`arabic_possible_roots.phonotactics.load_matrices`.
+        m_2_3: C2-C3 matrix from
+            :func:`arabic_possible_roots.phonotactics.load_matrices`.
         attested: Variety -> frozenset map from
-            :func:`arabic_roots.attestation.load_attested`.
+            :func:`arabic_possible_roots.attestation.load_attested`.
         variety: Variety to subtract; unknown varieties subtract nothing.
         order: Axis order to iterate; defaults to
-            :data:`arabic_roots.alphabet.ORDER`.
+            :data:`arabic_possible_roots.alphabet.ORDER`.
 
     Yields:
         Allowed triples absent from ``attested[variety]``, in
@@ -61,17 +63,19 @@ def count_possible(
     """Count legal-but-unattested triples.
 
     Args:
-        m_1_2: C1-C2 matrix from :func:`arabic_roots.phonotactics.load_matrices`.
-        m_2_3: C2-C3 matrix from :func:`arabic_roots.phonotactics.load_matrices`.
+        m_1_2: C1-C2 matrix from
+            :func:`arabic_possible_roots.phonotactics.load_matrices`.
+        m_2_3: C2-C3 matrix from
+            :func:`arabic_possible_roots.phonotactics.load_matrices`.
         attested: Variety -> frozenset map from
-            :func:`arabic_roots.attestation.load_attested`.
+            :func:`arabic_possible_roots.attestation.load_attested`.
         variety: Variety to subtract; unknown varieties subtract nothing.
         order: Axis order to iterate; defaults to
-            :data:`arabic_roots.alphabet.ORDER`.
+            :data:`arabic_possible_roots.alphabet.ORDER`.
 
     Returns:
         The number of allowed triples absent from ``attested[variety]``. Cheap
-        because the underlying :func:`arabic_roots.enumerator.iter_roots` walk
+        because the underlying :func:`arabic_possible_roots.enumerator.iter_roots` walk
         is memoized.
     """
     return sum(1 for _ in iter_possible(m_1_2, m_2_3, attested, variety, order))
@@ -87,13 +91,15 @@ def attested_illegal(
     """Return attested triples that are not phonotactically legal.
 
     Args:
-        m_1_2: C1-C2 matrix from :func:`arabic_roots.phonotactics.load_matrices`.
-        m_2_3: C2-C3 matrix from :func:`arabic_roots.phonotactics.load_matrices`.
+        m_1_2: C1-C2 matrix from
+            :func:`arabic_possible_roots.phonotactics.load_matrices`.
+        m_2_3: C2-C3 matrix from
+            :func:`arabic_possible_roots.phonotactics.load_matrices`.
         attested: Variety -> frozenset map from
-            :func:`arabic_roots.attestation.load_attested`.
+            :func:`arabic_possible_roots.attestation.load_attested`.
         variety: Variety to inspect; unknown varieties yield an empty tuple.
         order: Axis order to iterate; defaults to
-            :data:`arabic_roots.alphabet.ORDER`.
+            :data:`arabic_possible_roots.alphabet.ORDER`.
 
     Returns:
         The attested triples absent from the allowed set, in deterministic

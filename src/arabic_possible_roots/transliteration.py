@@ -1,6 +1,6 @@
 """Transliteration-scheme encoding and decoding.
 
-A *scheme* maps the 28 Arabic glyphs in :data:`arabic_roots.alphabet.ORDER`
+A *scheme* maps the 28 Arabic glyphs in :data:`arabic_possible_roots.alphabet.ORDER`
 to/from an external symbol set. The only scheme today is the ingest encoding
 used by CAMeL-Lab/ArabicChainBank (Buckwalter), stored in
 ``data/transliterations/buckwalter.csv``; output schemes (DIN 31635, IJMES,
@@ -15,7 +15,7 @@ from collections.abc import Iterable, Mapping
 
 from frozendict import frozendict
 
-from arabic_roots.alphabet import GLYPH_SET, ORDER, nfc
+from arabic_possible_roots.alphabet import GLYPH_SET, ORDER, nfc
 
 __all__ = [
     "BUCKWALTER_COLUMN",
@@ -54,7 +54,7 @@ def build_decoder(
     Raises:
         ValueError: On non-string cells, blank symbols, duplicate symbols, or
             when the glyph column does not cover
-            :data:`arabic_roots.alphabet.ORDER` exactly.
+            :data:`arabic_possible_roots.alphabet.ORDER` exactly.
 
     Notes:
         The mapping is data, not code: symbols come from CSV, never literals.

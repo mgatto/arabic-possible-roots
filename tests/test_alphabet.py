@@ -4,7 +4,7 @@ import unicodedata
 
 import pytest
 
-from arabic_roots.alphabet import (
+from arabic_possible_roots.alphabet import (
     LETTERS,
     LOOKUP,
     ORDER,

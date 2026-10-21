@@ -1,7 +1,7 @@
 """Derive ``data/roots/attested.csv`` from CAMeL-Lab/ArabicChainBank.
 
 Build-time orchestrator around
-:mod:`arabic_roots.arabic_chain_bank_provider`. Upstream ``lemmas.csv`` is
+:mod:`arabic_possible_roots.arabic_chain_bank_provider`. Upstream ``lemmas.csv`` is
 never vendored: this script reads it from a commit-pinned raw GitHub URL (or
 a local ``--lemmas`` path), decodes the Buckwalter ``ROOT`` column with
 ``data/transliterations/buckwalter.csv``, and writes the committed
@@ -22,13 +22,13 @@ import urllib.request
 from collections.abc import Mapping
 from pathlib import Path
 
-from arabic_roots.arabic_chain_bank_provider import (
+from arabic_possible_roots.arabic_chain_bank_provider import (
     DEFAULT_SHA,
     FIELDNAMES,
     RAW_LEMMAS_URL,
     build_rows,
 )
-from arabic_roots.transliteration import build_decoder
+from arabic_possible_roots.transliteration import build_decoder
 
 REPO_ROOT: Path = Path(__file__).resolve().parents[1]
 DEFAULT_OUTPUT: Path = REPO_ROOT / "data" / "roots" / "attested.csv"

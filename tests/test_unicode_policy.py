@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-_SRC = Path(__file__).resolve().parents[1] / "src" / "arabic_roots"
+_SRC = Path(__file__).resolve().parents[1] / "src" / "arabic_possible_roots"
 
 
 def _python_files() -> list[Path]:

@@ -25,7 +25,7 @@ from pathlib import Path
 import pandas as pd
 from frozendict import frozendict
 
-from arabic_roots.alphabet import nfc
+from arabic_possible_roots.alphabet import nfc
 
 __all__ = ["format_for_suffix", "write_roots"]
 

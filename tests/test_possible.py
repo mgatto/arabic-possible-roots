@@ -3,10 +3,14 @@
 import csv
 from pathlib import Path
 
-from arabic_roots.attestation import load_attested
-from arabic_roots.enumerator import count_roots, iter_roots
-from arabic_roots.phonotactics import load_matrices
-from arabic_roots.possible import attested_illegal, count_possible, iter_possible
+from arabic_possible_roots.attestation import load_attested
+from arabic_possible_roots.enumerator import count_roots, iter_roots
+from arabic_possible_roots.phonotactics import load_matrices
+from arabic_possible_roots.possible import (
+    attested_illegal,
+    count_possible,
+    iter_possible,
+)
 
 _HEADER = ["c1", "c2", "c3", "variety", "source"]
 

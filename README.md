@@ -1,4 +1,4 @@
-# arabic-roots
+# arabic-possible-roots
 
 Enumerate triliteral (ف-ع-ل) Arabic roots constrained by phonotactic
 co-occurrence matrices.
@@ -12,6 +12,11 @@ there are **13656** legal roots; subtracting the **3715** attested MSA roots
 that are also legal leaves **9941** possible roots. (A further **244**
 attested roots are phonotactically illegal and are reported as a warning.) The
 CLI emits possible roots.
+
+> [!WARNING]
+> This is a work in progress; *244 attested roots are phonotactically illegal*
+> including some very common ones like, ء-ه-ل, ر-ش-د.
+> I'm still refining my codification of Arabic's phonotactical rules for triliteral roots.
 
 ## Requirements
 
@@ -32,7 +37,7 @@ uv run enumerate-roots --data-dir data --limit 10
 The console script is `enumerate-roots`; the module path is equivalent:
 
 ```bash
-uv run python -m arabic_roots --limit 10
+uv run python -m arabic_possible_roots --limit 10
 ```
 
 ### Options
@@ -41,7 +46,7 @@ uv run python -m arabic_roots --limit 10
 |--------------|---------------|------------------------------------------------------|
 | `--data-dir` | `<repo>/data` | Data root holding `rules/` (per-type `m_1-2`/`m_2-3` matrices) |
 | `--limit`    | `10`          | How many sample roots to print (`0` prints none)     |
-| `--output`   | none          | Output path; format inferred from suffix (`.tsv`, `.csv`) |
+| `--output`   | none          | Output path; format inferred from suffix (`.tsv`, `.csv`, `.jsonl`, `.parquet`, `.sqlite`) |
 | `--scheme`   | `arabic`      | Output scheme: `arabic`, `din31635`, `ijmes`, `ipa`  |
 | `--delimiter`| `-`           | Separator between rendered consonants on stdout      |
 | `--log-file` | none          | Append a timestamped UTF-8 run log to this path      |
@@ -85,6 +90,7 @@ data/
   rules/m_2-3_homorganic.csv       # C2–C3 natural-class gate
   roots/attested.csv           # MSA attested roots: c1,c2,c3,variety,source
   transliterations/buckwalter.csv  # ingest-only encoding table
+  transliterations/ijmes.csv   # output scheme table: glyph,ijmes
 ```
 
 Rules live **only** in `data/rules/*.csv`. Each position is assembled from one
@@ -100,20 +106,20 @@ Phonetica 45:84-108). Every `0` needs a page citation plus a regression test.
 
 ## Architecture
 
-Standard `src/` layout, package `arabic_roots`:
+Standard `src/` layout, package `arabic_possible_roots`:
 
 | Module | Responsibility |
 |--------|----------------|
+| `__init__.py` | public API re-exports + `__version__` (single-sourced from `pyproject.toml`) |
 | `alphabet.py` | 28-glyph source of truth: `ORDER`, `LETTERS`, `LOOKUP`, place/manner |
 | `phonotactics.py` | `load_matrices()` / `load_matrix()` composition + `successors(matrix, order)` |
 | `enumerator.py` | `iter_roots()` / `count_roots()` via matrix-successor walk (memoized) |
 | `attestation.py` | `load_attested()` + `is_attested()` over `data/roots/attested.csv` |
 | `possible.py` | `iter_possible()` / `count_possible()`: legal minus attested |
-| `transliteration.py` | scheme encode/decode (Buckwalter now; DIN/IJMES/IPA later) |
+| `transliteration.py` | scheme encode/decode primitives (Buckwalter ingest, IJMES output) |
 | `arabic_chain_bank_provider.py` | build-time extraction/dedupe (pure, no I/O) |
-| `statemachine.py` | `TriliteralMachine`: single-root guard prototype (tests only) |
 | `writers.py` | suffix-driven output writers (`.tsv`, `.csv`, `.jsonl`, `.parquet`, `.sqlite`) |
-| `render.py` | output schemes (`arabic`, `din31635`, `ijmes`, `ipa`) |
+| `render.py` | output transliteration schemes (`arabic`, `din31635`, `ijmes`, `ipa`) |
 | `cli.py` | the `enumerate-roots` console script |
 
 Enumeration walks the matrices' per-glyph successor lists, following only
@@ -122,6 +128,31 @@ Enumeration walks the matrices' per-glyph successor lists, following only
 emits only legal-but-unattested roots. Output is ORDER-lexicographic and
 deterministic. Attestation is a separate axis: it is a lexicon, never a rule,
 and does not feed enumeration.
+
+## Using as a library
+
+The package exposes a small public API (re-exported from `arabic_possible_roots`) so
+other programs can reuse it without wiring into the CLI:
+
+```python
+from arabic_possible_roots import (
+    count_possible,
+    is_attested,
+    iter_possible,
+    load_attested,
+    load_matrices,
+)
+
+m_1_2, m_2_3 = load_matrices()          # 28×28 boolean co-occurrence gates
+attested = load_attested()              # {"msa": frozenset[(c1, c2, c3), ...]}
+
+count_possible(m_1_2, m_2_3, attested)  # 9941
+is_attested("ك", "ت", "ب", attested)    # True
+next(iter_possible(m_1_2, m_2_3, attested))  # ("ء", "ب", "ء")
+```
+
+The distribution ships inline type annotations plus a `py.typed` marker
+(PEP 561), so downstream `mypy` / `ty` users get types without extra setup.
 
 ## Build-time data
 
@@ -155,6 +186,28 @@ __future__ import annotations` is forbidden (Python 3.14 defers annotations
 natively). See `AGENTS.md` for the full conventions and the knowledge-bank
 policy, and `docs/` for `running.md`, `Future.md`, and `Completed.md`.
 
+## Releasing
+
+Releases use [commitizen](https://commitizen-tools.github.io/commitizen/) to
+infer the next version from Conventional Commits, update `CHANGELOG.md` and
+`uv.lock`, commit, and tag:
+
+```bash
+uv run cz bump                        # e.g. 0.6.0 -> 0.7.0; commits + tags v0.7.0
+git push origin --follow-tags         # push the tag after creating the repo
+uv run cz bump 1.0.0                  # override the inferred version
+```
+
+Tags are annotated (`vX.Y.Z`). See `docs/releasing.md` for the full workflow.
+
+## Contributing
+
+This is an academic project with strict reproducibility and evidence rules:
+every phonotactic `0` in a matrix needs a page citation plus a regression test,
+and Arabic glyphs are literal NFC codepoints. Read `AGENTS.md` before changing
+`data/` or adding rules, and run the quality gates above before any commit.
+The human engineer owns all `git commit`/`git tag` operations.
+
 ## License
 
-Not stated.
+[MIT](LICENSE) © 2026 Michael Gatto.
