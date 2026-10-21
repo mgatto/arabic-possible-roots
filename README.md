@@ -160,6 +160,9 @@ The distribution ships inline type annotations plus a `py.typed` marker
 [CAMeL-Lab/ArabicChainBank](https://github.com/CAMeL-Lab/ArabicChainBank) at a
 pinned commit. Regenerate it only via the orchestrator (never edit by hand):
 
+
+Reham Marzouk, Sondos Krouna, and Nizar Habash. 2025. A Derivational ChainBank for Modern Standard Arabic. In Proceedings of the 1st Workshop on NLP for Languages Using Arabic Script, pages 78–87, Abu Dhabi, UAE. Association for Computational Linguistics.
+
 ```bash
 uv run python scripts/fetch_attested.py
 ```
