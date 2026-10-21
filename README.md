@@ -27,7 +27,7 @@ CLI emits possible roots.
 
 ## Install and run
 
-Run everything from this directory (`Code/`) through `uv`:
+Run everything from this directory (`arabic-possible-roots/`) through `uv`:
 
 ```bash
 uv sync --locked

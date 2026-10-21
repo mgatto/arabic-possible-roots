@@ -1,6 +1,6 @@
 # Running `enumerate-roots`
 
-Run everything from `Code/` (the project root) through `uv` so you get the
+Run everything from `arabic-possible-roots/` (the project root) through `uv` so you get the
 pinned Python 3.14 `.venv`:
 
 ```bash
