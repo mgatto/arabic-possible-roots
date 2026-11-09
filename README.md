@@ -1,17 +1,10 @@
 # arabic-possible-roots
 
-Enumerate triliteral (ف-ع-ل) Arabic roots constrained by phonotactic
-co-occurrence matrices.
+Enumerate all possible triliteral (ف-ع-ل) Arabic roots constrained by phonotactic co-occurrence matrices. A **possible root** is a triliteral consonant sequence that is *phonotactically legal* but *unattested* in the lexicon. 
 
-A **possible root** is a triliteral consonant sequence that is
-*phonotactically legal* but *unattested* in the lexicon. The permissive
-baseline is every `28³ = 21952` candidate over the 28-consonant inventory;
-the co-occurrence matrices remove only pairs backed by a cited source. With
-the shipped matrices (the `self` and `homorganic` gates ANDed per position)
-there are **13656** legal roots; subtracting the **3715** attested MSA roots
-that are also legal leaves **9941** possible roots. (A further **244**
-attested roots are phonotactically illegal and are reported as a warning.) The
-CLI emits possible roots.
+The permissive baseline is every `28³ = 21952` candidate over the 28-consonant inventory; the co-occurrence matrices remove only pairs backed by a cited source. With the shipped matrices (the `self` and `homorganic` gates ANDed per position) there are **13,656** legal roots; subtracting the **3,715** attested MSA roots that are also legal leaves **9,941** possible roots. (A further **244** attested roots are phonotactically illegal and are reported as a warning.) 
+
+The CLI emits possible roots. Selected python modules act as a library and are reusable by other projects (hint). Let me know if you have an idea for building in relevant functionality. 
 
 > [!WARNING]
 > This is a work in progress; *244 attested roots are phonotactically illegal*
@@ -20,12 +13,65 @@ CLI emits possible roots.
 
 ## Requirements
 
-- Python **3.14** only (`requires-python == "3.14.*"`); other versions are
-  unsupported.
-- [`uv`](https://docs.astral.sh/uv/) for the pinned virtualenv and locked
-  dependency resolution.
+- Python **3.14** (`requires-python == "3.14.*"`); other versions may probably work, but this project was developed with 3.14.
+- [`uv`](https://docs.astral.sh/uv/) for the pinned virtualenv and locked dependency resolution.
 
 ## Install and run
+
+I personally use the [`uv`](https://docs.astral.sh/uv/) tool for developing this project. You, however, don't have to use it if you don't already.
+
+### Installing and running with `pip`
+
+You can install and run the project without `uv`. From a cloned repository:
+
+**Step 1: Create a virtual environment.**
+
+```bash
+python3 -m venv .venv
+```
+
+**Step 2: Activate it.**
+
+macOS/Linux:
+
+```bash
+source .venv/bin/activate
+```
+
+**Step 3: Install the project.**
+
+```bash
+python3 -m pip install .
+```
+
+This reads your `pyproject.toml`, installs the dependencies, builds the package, and registers the `enumerate-roots` console command.
+
+**Step 4: Run it.**
+
+```bash
+enumerate-roots --data-dir data --limit 10
+```
+
+You can also run the module directly:
+
+```bash
+python3 -m arabic_possible_roots --limit 10
+```
+
+> [!NOTE]
+> Run these commands from your repository directory. Your data files live outside the Python package, so an installed package used elsewhere may need an explicit `--data-dir` pointing to those files.
+
+#### Optional output functionality
+
+For Parquet support:
+
+```bash
+python3 -m pip install ".[output]"
+```
+
+This installs `pyarrow` as well.
+
+### Installing and running with `uv`
 
 Run everything from this directory (`arabic-possible-roots/`) through `uv`:
 
@@ -37,7 +83,7 @@ uv run enumerate-roots --data-dir data --limit 10
 The console script is `enumerate-roots`; the module path is equivalent:
 
 ```bash
-uv run python -m arabic_possible_roots --limit 10
+uv run python3 -m arabic_possible_roots --limit 10
 ```
 
 ### Options
@@ -51,16 +97,14 @@ uv run python -m arabic_possible_roots --limit 10
 | `--delimiter`| `-`           | Separator between rendered consonants on stdout      |
 | `--log-file` | none          | Append a timestamped UTF-8 run log to this path      |
 
-`--output PATH` writes the full possible-roots set (ignoring `--limit`). The
-format comes from the suffix:
+`--output PATH` writes the full possible-roots set (ignoring `--limit`). The format comes from the suffix:
 
 - `.tsv` / `.csv` — delimited text, header `c1,c2,c3`.
 - `.jsonl` — one JSON object per line (literal glyphs).
 - `.parquet` — columnar; requires the optional extra (`uv sync --extra output`).
 - `.sqlite` — a `roots` table with a primary key over the triple.
 
-Text formats are UTF-8/NFC with LF endings; all preserve ORDER. An unknown
-suffix is an error.
+Text formats are UTF-8/NFC with LF endings; all preserve ORDER. An unknown suffix is an error.
 
 `--scheme` renders each consonant (`arabic` default, or `din31635`, `ijmes`,
 `ipa`); it applies to stdout and to `--output` cells alike. `--delimiter`
@@ -77,8 +121,7 @@ Sample stdout (hyphen-joined Arabic script; possible roots only):
 ء-ب-ث
 ```
 
-Do not invoke `python enumerate-roots` — `enumerate-roots` is a generated
-console script, not a file. See `docs/running.md` for failure modes.
+Do not invoke `python3 enumerate-roots` — `enumerate-roots` is a generated console script, not a file. See `docs/running.md` for failure modes.
 
 ## Data layout
 
@@ -95,7 +138,7 @@ data/
 
 Rules live **only** in `data/rules/*.csv`. Each position is assembled from one
 or more *matrix types* (`m_{position}_{type}.csv`) combined by logical **AND**
-— a pair is legal only if every selected matrix allows it. Each cell is `1`
+— a root pair is legal only if every selected matrix allows it. Each cell is `1`
 (pair may co-occur) or `0` (forbidden). The `self` gate carries the identity
 rule: the `m_1-2` diagonal is `0` (`C1 ≠ C2`; Greenberg 1950, *The Patterning
 of Root Morphemes in Semitic*, WORD 6:2, p.162) while the `m_2-3` diagonal
@@ -158,17 +201,17 @@ The distribution ships inline type annotations plus a `py.typed` marker
 
 `data/roots/attested.csv` is derived from
 [CAMeL-Lab/ArabicChainBank](https://github.com/CAMeL-Lab/ArabicChainBank) at a
-pinned commit. Regenerate it only via the orchestrator (never edit by hand):
+pinned commit. 
 
+> Reham Marzouk, Sondos Krouna, and Nizar Habash. 2025. A Derivational ChainBank for Modern Standard Arabic. In Proceedings of the 1st Workshop on NLP for Languages Using Arabic Script, pages 78–87, Abu Dhabi, UAE. Association for Computational Linguistics.
 
-Reham Marzouk, Sondos Krouna, and Nizar Habash. 2025. A Derivational ChainBank for Modern Standard Arabic. In Proceedings of the 1st Workshop on NLP for Languages Using Arabic Script, pages 78–87, Abu Dhabi, UAE. Association for Computational Linguistics.
+Regenerate it only via the orchestrator (never edit by hand):
 
 ```bash
 uv run python scripts/fetch_attested.py
 ```
 
-Buckwalter appears **only** in `data/transliterations/buckwalter.csv`, an
-external ingest-encoding table; no Buckwalter literal appears in `.py`.
+Buckwalter in this project appears **only** in `data/transliterations/buckwalter.csv`, an external ingest-encoding table; no Buckwalter literal appears in `.py`.
 
 ## Development
 
@@ -191,9 +234,7 @@ policy, and `docs/` for `running.md`, `Future.md`, and `Completed.md`.
 
 ## Releasing
 
-Releases use [commitizen](https://commitizen-tools.github.io/commitizen/) to
-infer the next version from Conventional Commits, update `CHANGELOG.md` and
-`uv.lock`, commit, and tag:
+Releases use [commitizen](https://commitizen-tools.github.io/commitizen/) to infer the next version from Conventional Commits, update `CHANGELOG.md` and `uv.lock`, commit, and tag all at once:
 
 ```bash
 uv run cz bump                        # e.g. 0.6.0 -> 0.7.0; commits + tags v0.7.0
