@@ -37,9 +37,10 @@ data/rules/m_2-3_homorganic.csv # C2–C3 natural-class gate (McCarthy 1988)
 data/roots/attested.csv         # MSA attested roots: c1,c2,c3,variety,source (NFC)
 data/transliterations/buckwalter.csv # ingest-only encoding table: glyph,buckwalter (28 rows)
 data/transliterations/ijmes.csv      # output scheme table: glyph,ijmes (28 rows)
-scripts/            # build-time orchestrators (fetch_attested.py)
+scripts/            # build/test tooling (fetch_attested.py, test_python_versions.py)
 docs/running.md     # how to run (commands, failure table, options)
 docs/releasing.md   # commitizen release workflow (cz bump / tag / push)
+docs/python-versions.md # disposable-copy multi-version certification policy
 docs/Future.md      # open micro-PRDs (natural classes, branded glyph)
 docs/Completed.md   # shipped micro-PRDs ledger (date, SHA, evidence)
 tests/              # alphabet, matrices, golden-count, chain-bank, attestation, cli
@@ -78,6 +79,9 @@ stub alphabet — ported and fixed under `src/`.
   unsupported; always run through `uv run` / `uv sync`.
 - `ruff` uses `target-version = "py314"`, `mypy` uses `python_version = "3.14"`
   with `--strict`, `ty` uses `[tool.ty.environment] python-version = "3.14"`.
+- Other interpreters are not support targets. Certify them only through
+  `scripts/test_python_versions.py`, which patches disposable copies; see
+  `docs/python-versions.md`. This does not change the 3.14 pins.
 - Python 3.14 implements PEP 649 (via PEP 749): annotations are lazily
   deferred natively, stored as the lightweight `__annotate__` function and
   evaluated only when explicitly requested at runtime — not at import time.
@@ -145,6 +149,9 @@ uv run pytest
 uv run enumerate-roots --limit 5
 ```
 
+- Multi-version certification is separate from the commit gates:
+  `uv run python scripts/test_python_versions.py` (disposable copies only;
+  see `docs/python-versions.md`).
 - `ruff`: `py314`, line-length 88, `E,F,I,UP,B,W,N,C90`.
 - `mypy --strict` (+ `pandas-stubs`).
 - `ty check` is also the opencode LSP backend (see §6); keep it clean.
